@@ -1,13 +1,19 @@
 services:
   - type: web
     name: instagram-content-studio
-    runtime: docker
-    dockerfilePath: ./Dockerfile
+    runtime: node
+    buildCommand: npm install
+    startCommand: node backend/server.js
+    healthCheckPath: /api/status
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 3000
+      - key: AUTO_SCHEDULE
+        value: "false"
+      - key: PUBLIC_BASE_URL
+        value: "https://instagram-content-studio.onrender.com"
       - key: GEMINI_API_KEY
         sync: false
       - key: INSTAGRAM_ACCESS_TOKEN
@@ -20,13 +26,3 @@ services:
         sync: false
       - key: NGROK_AUTHTOKEN
         sync: false
-      - key: AUTO_SCHEDULE
-        value: "false"
-      - key: PUBLIC_BASE_URL
-        value: ""   # Set this to your Render service URL after first deploy, e.g. https://your-app.onrender.com
-
-    healthCheckPath: /api/status
-    disk:
-      name: data
-      mountPath: /app/backend/data
-      sizeGB: 1
