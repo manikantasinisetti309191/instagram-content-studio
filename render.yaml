@@ -2,7 +2,8 @@ services:
   - type: web
     name: instagram-content-studio
     runtime: node
-    buildCommand: npm install
+    buildCommand: npm install --omit=dev
+
     startCommand: node backend/server.js
     healthCheckPath: /api/status
     envVars:
