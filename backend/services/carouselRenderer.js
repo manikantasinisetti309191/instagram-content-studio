@@ -272,26 +272,40 @@ function drawSlide1(ctx, slideData, postData) {
   const theme = SLIDE_THEMES[1];
   drawBackground(ctx, 1);
   
-  // Label badge
+  // Label badge (e.g. BREAKING, MUST KNOW, MODEL RELEASE)
   const label = stripEmoji(slideData.label || 'BREAKING');
   ctx.save();
-  const badgeW = ctx.measureText(label).width + 40;
+  ctx.font = '700 14px Arial';
+  const badgeW = ctx.measureText(label.toUpperCase()).width + 30;
   const badgeX = 60;
   const badgeY = 100;
-  
-  ctx.beginPath();
-  roundRectPath(ctx, badgeX, badgeY, badgeW + 20, 36, 18);
+
+  roundRectPath(ctx, badgeX, badgeY, badgeW, 34, 17);
   ctx.fillStyle = `${theme.accent}20`;
   ctx.fill();
   ctx.strokeStyle = `${theme.accent}60`;
   ctx.lineWidth = 1;
   ctx.stroke();
-  
   ctx.fillStyle = theme.accent;
-  ctx.font = '700 14px Arial';
-  ctx.letterSpacing = '2px';
-  ctx.fillText(label.toUpperCase(), badgeX + 15, badgeY + 23);
+  ctx.fillText(label.toUpperCase(), badgeX + 15, badgeY + 22);
   ctx.restore();
+
+  // "AI LATEST NEWS" category tag — to the right of badge
+  ctx.save();
+  ctx.font = '600 13px Arial';
+  const catLabel = 'AI LATEST NEWS';
+  const catX = badgeX + badgeW + 16;
+  const catW = ctx.measureText(catLabel).width + 26;
+  roundRectPath(ctx, catX, badgeY, catW, 34, 17);
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.fillText(catLabel, catX + 13, badgeY + 22);
+  ctx.restore();
+
   
   // Emoji
   ctx.font = '900 72px Arial';
@@ -365,14 +379,19 @@ function drawSlide2(ctx, slideData, postData) {
   ctx.textAlign = 'left';
   ctx.fillText('EXPLAINER', 80, 117);
   
-  // Title
-  ctx.font = '900 68px Arial';
+  // Title — dynamic font size so long titles wrap cleanly
+  const rawTitle2 = stripEmoji(slideData.title || 'What Is This?');
+  let titleFont2 = 68;
+  if (rawTitle2.length > 28) titleFont2 = 58;
+  if (rawTitle2.length > 42) titleFont2 = 50;
+  const titleLH2 = Math.round(titleFont2 * 1.22);
+  ctx.font = `900 ${titleFont2}px Arial`;
   ctx.fillStyle = COLORS.text_primary;
-  const titleLines = wrapText(ctx, stripEmoji(slideData.title || 'What Is This?'), WIDTH - 120);
+  const titleLines = wrapText(ctx, rawTitle2, WIDTH - 120);
   let yPos = 230;
-  titleLines.slice(0, 2).forEach(line => {
+  titleLines.slice(0, 3).forEach(line => {
     ctx.fillText(line, 60, yPos);
-    yPos += 82;
+    yPos += titleLH2;
   });
   
   // Divider
@@ -428,14 +447,19 @@ function drawSlide3(ctx, slideData, postData) {
   ctx.textAlign = 'left';
   ctx.fillText('EXPLAIN IT SIMPLY', 60, 110);
 
-  // Title
-  ctx.font = '900 66px Arial';
+  // Title — dynamic font size
+  const rawTitle3 = stripEmoji(slideData.title || 'What Does This Actually Mean?');
+  let titleFont3 = 66;
+  if (rawTitle3.length > 28) titleFont3 = 56;
+  if (rawTitle3.length > 42) titleFont3 = 48;
+  const titleLH3 = Math.round(titleFont3 * 1.22);
+  ctx.font = `900 ${titleFont3}px Arial`;
   ctx.fillStyle = COLORS.text_primary;
-  const titleLines = wrapText(ctx, stripEmoji(slideData.title || 'What Does This Actually Mean?'), WIDTH - 120);
+  const titleLines = wrapText(ctx, rawTitle3, WIDTH - 120);
   let yPos = 210;
-  titleLines.slice(0, 2).forEach(line => {
+  titleLines.slice(0, 3).forEach(line => {
     ctx.fillText(line, 60, yPos);
-    yPos += 82;
+    yPos += titleLH3;
   });
 
   yPos += 30;
@@ -490,14 +514,19 @@ function drawSlide4(ctx, slideData, postData) {
   ctx.textAlign = 'left';
   ctx.fillText('WHY IT MATTERS', 60, 110);
 
-  // Title
-  ctx.font = '900 66px Arial';
+  // Title — dynamic font size
+  const rawTitle4 = stripEmoji(slideData.title || 'Why YOU Should Care');
+  let titleFont4 = 66;
+  if (rawTitle4.length > 28) titleFont4 = 56;
+  if (rawTitle4.length > 42) titleFont4 = 48;
+  const titleLH4 = Math.round(titleFont4 * 1.22);
+  ctx.font = `900 ${titleFont4}px Arial`;
   ctx.fillStyle = COLORS.text_primary;
-  const titleLines = wrapText(ctx, stripEmoji(slideData.title || 'Why YOU Should Care'), WIDTH - 120);
+  const titleLines = wrapText(ctx, rawTitle4, WIDTH - 120);
   let yPos = 210;
-  titleLines.slice(0, 2).forEach(line => {
+  titleLines.slice(0, 3).forEach(line => {
     ctx.fillText(line, 60, yPos);
-    yPos += 80;
+    yPos += titleLH4;
   });
 
   yPos += 10;
@@ -546,14 +575,19 @@ function drawSlide5(ctx, slideData, postData) {
   ctx.textAlign = 'left';
   ctx.fillText('HOW IT WORKS', 60, 110);
 
-  // Title
-  ctx.font = '900 66px Arial';
+  // Title — dynamic font size
+  const rawTitle5 = stripEmoji(slideData.title || 'How It Actually Works');
+  let titleFont5 = 66;
+  if (rawTitle5.length > 28) titleFont5 = 56;
+  if (rawTitle5.length > 42) titleFont5 = 48;
+  const titleLH5 = Math.round(titleFont5 * 1.22);
+  ctx.font = `900 ${titleFont5}px Arial`;
   ctx.fillStyle = COLORS.text_primary;
-  const titleLines = wrapText(ctx, stripEmoji(slideData.title || 'How It Actually Works'), WIDTH - 120);
+  const titleLines = wrapText(ctx, rawTitle5, WIDTH - 120);
   let yPos = 210;
-  titleLines.slice(0, 2).forEach(line => {
+  titleLines.slice(0, 3).forEach(line => {
     ctx.fillText(line, 60, yPos);
-    yPos += 80;
+    yPos += titleLH5;
   });
 
   yPos += 20;
@@ -596,7 +630,17 @@ function drawSlide6(ctx, slideData, post) {
   drawBackground(ctx, 6);
   ctx.textAlign = 'center';
 
-  drawGlowText(ctx, stripEmoji(slideData.title || 'How YOU Can Use This'), WIDTH/2, 180, 42, theme.accent, theme.glow, 'center');
+  // Slide 6 title — wrap if too long
+  const s6title = stripEmoji(slideData.title || 'How YOU Can Use This');
+  const s6sz = s6title.length > 30 ? 34 : 42;
+  ctx.font = `700 ${s6sz}px Arial`;
+  const s6lines = wrapText(ctx, s6title, WIDTH - 100);
+  let s6y = 170;
+  s6lines.slice(0, 2).forEach(l => {
+    ctx.save(); ctx.textAlign = 'center'; ctx.shadowColor = theme.glow; ctx.shadowBlur = 20;
+    ctx.fillStyle = theme.accent; ctx.fillText(l, WIDTH/2, s6y); ctx.restore();
+    s6y += s6sz * 1.3;
+  });
 
   const cases = [
     { label: 'Student',  val: slideData.use_case_1 },
@@ -635,15 +679,15 @@ function drawSlide7(ctx, slideData, post) {
   ctx.fillStyle = COLORS.accent_green;
   ctx.font = '700 26px Arial';
   ctx.fillText('PROS', 285, 258);
-  [[slideData.pro_1, 310], [slideData.pro_2, 390]].forEach(([txt, y]) => {
+  [[slideData.pro_1, 300], [slideData.pro_2, 400]].forEach(([txt, y]) => {
     ctx.fillStyle = COLORS.accent_green;
-    ctx.font = '700 28px Arial';
+    ctx.font = '700 26px Arial';
     ctx.fillText('+', 90, y);
     ctx.fillStyle = COLORS.text_primary;
-    ctx.font = '500 24px Arial';
+    ctx.font = '500 22px Arial';
     ctx.textAlign = 'left';
     const lines = wrapText(ctx, stripEmoji(txt || ''), 370);
-    lines.slice(0, 2).forEach((l, li) => ctx.fillText(l, 115, y + li * 30));
+    lines.slice(0, 3).forEach((l, li) => ctx.fillText(l, 115, y + li * 28));
     ctx.textAlign = 'center';
   });
 
@@ -652,15 +696,15 @@ function drawSlide7(ctx, slideData, post) {
   ctx.fillStyle = COLORS.accent_pink;
   ctx.font = '700 26px Arial';
   ctx.fillText('CONS', 790, 258);
-  [[slideData.con_1, 310], [slideData.con_2, 390]].forEach(([txt, y]) => {
+  [[slideData.con_1, 300], [slideData.con_2, 400]].forEach(([txt, y]) => {
     ctx.fillStyle = COLORS.accent_pink;
-    ctx.font = '700 28px Arial';
+    ctx.font = '700 26px Arial';
     ctx.fillText('-', 595, y);
     ctx.fillStyle = COLORS.text_primary;
-    ctx.font = '500 24px Arial';
+    ctx.font = '500 22px Arial';
     ctx.textAlign = 'left';
     const lines = wrapText(ctx, stripEmoji(txt || ''), 370);
-    lines.slice(0, 2).forEach((l, li) => ctx.fillText(l, 620, y + li * 30));
+    lines.slice(0, 3).forEach((l, li) => ctx.fillText(l, 620, y + li * 28));
     ctx.textAlign = 'center';
   });
 
@@ -718,7 +762,17 @@ function drawSlide9(ctx, slideData, post) {
 
   // Title centered
   ctx.textAlign = 'center';
-  drawGlowText(ctx, stripEmoji(slideData.title || 'Pro Tips to Get Started'), WIDTH/2, 175, 44, theme.accent, theme.glow, 'center');
+  // Slide 9 title — wrap if too long
+  const s9title = stripEmoji(slideData.title || 'Pro Tips to Get Started');
+  const s9sz = s9title.length > 30 ? 36 : 44;
+  ctx.font = `700 ${s9sz}px Arial`;
+  const s9lines = wrapText(ctx, s9title, WIDTH - 120);
+  let s9y = 168;
+  s9lines.slice(0, 2).forEach(l => {
+    ctx.save(); ctx.textAlign = 'center'; ctx.shadowColor = theme.glow; ctx.shadowBlur = 20;
+    ctx.fillStyle = theme.accent; ctx.fillText(l, WIDTH/2, s9y); ctx.restore();
+    s9y += s9sz * 1.25;
+  });
 
   const tips = [
     { num: '01', txt: slideData.tip_1 },
