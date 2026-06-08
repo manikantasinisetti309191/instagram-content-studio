@@ -38,9 +38,11 @@ KEY TEACHING POINTS: ${JSON.stringify(newsItem.key_teaching_points || [])}
 
 SLIDE 1 — THE HOOK (Make them stop scrolling in 0.3 seconds):
 - LABEL: Power word: "BREAKING" / "GAME CHANGER" / "MUST KNOW" / "WOW" / "JUST DROPPED"
-- TITLE: 5-8 words that make it impossible NOT to swipe. Use numbers if possible. Create a knowledge gap.
+- TITLE: 5-10 words that make it impossible NOT to swipe. Use numbers if possible. Create a knowledge gap. NEVER use "..." or ellipsis. Write the complete title.
   ✅ Good: "Midjourney Now Makes Videos From Text"
+  ✅ Good: "OpenAI Launches GPT-5 with Unprecedented Reasoning"
   ❌ Bad: "New AI Update Released"
+  ❌ Bad: "OpenAI Launches GPT-5 with Unprecedented R..."
 - SUBTITLE: Adds intrigue. Hints at the value inside. Max 12 words. (e.g. "Here's what it means for YOUR career — swipe to find out")
 
 SLIDE 2 — THE NEWS (Crystal clear, 30 seconds to read):

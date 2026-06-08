@@ -149,9 +149,10 @@ function buildGuaranteedFallback(newsItem, rank) {
     slides: {
       slide_1: {
         label: 'MUST KNOW',
-        title: h.length > 45 ? h.substring(0, 42) + '...' : h,
+        title: h,  // full headline — canvas fitTitle handles wrapping, no truncation needed
         subtitle: `Here's what it means for you — swipe to learn in 60 seconds.`,
       },
+
       slide_2: {
         title: "Here's What Happened",
         bullet_1: s.split('.')[0]?.trim() || `${src} just announced a major AI update`,
