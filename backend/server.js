@@ -46,8 +46,36 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Serve generated images
-app.use('/images', express.static(IMAGES_DIR));
+// Serve generated carousel images — disk first, in-memory fallback
+// This keeps URL-based <img src="/images/..."> working even after Render disk wipes.
+app.get('/images/:postId/:filename', (req, res) => {
+  const { postId, filename } = req.params;
+
+  // 1. Disk — fast path when files still exist
+  const filepath = path.join(IMAGES_DIR, postId, filename);
+  if (fs.existsSync(filepath)) {
+    res.set('Content-Type', 'image/png');
+    res.set('Cache-Control', 'no-cache');
+    return res.sendFile(filepath);
+  }
+
+  // 2. In-memory imageStore — decode base64 → real PNG bytes
+  if (imageStore.has(postId)) {
+    const slideNum = parseInt(filename.replace('slide_', '').replace('.png', ''), 10) - 1;
+    const base64Images = imageStore.get(postId);
+    if (base64Images && base64Images[slideNum]) {
+      const buf = Buffer.from(
+        base64Images[slideNum].replace(/^data:image\/png;base64,/, ''),
+        'base64'
+      );
+      res.set('Content-Type', 'image/png');
+      res.set('Cache-Control', 'no-cache');
+      return res.send(buf);
+    }
+  }
+
+  res.status(404).json({ error: 'Image not found' });
+});
 
 // ================================
 // WEBSOCKET — Real-time updates
@@ -180,27 +208,29 @@ app.get('/api/posts/:postId', (req, res) => {
   }
 });
 
-// Get carousel images for a post — checks in-memory store first, then disk
+// Get carousel images for a post — always returns URL paths (never base64)
+// The /images/:postId/:file route handles disk-or-memory serving transparently.
 app.get('/api/posts/:postId/images', (req, res) => {
   const { postId } = req.params;
 
-  // 1. In-memory store (fastest, always fresh, survives restarts in same process)
+  // Count how many slides we have (check store, then disk)
+  let count = 0;
   if (imageStore.has(postId)) {
-    return res.json({ images: imageStore.get(postId), post_id: postId });
+    count = imageStore.get(postId).length;
+  } else {
+    const imageDir = path.join(IMAGES_DIR, postId);
+    if (fs.existsSync(imageDir)) {
+      count = fs.readdirSync(imageDir).filter(f => f.endsWith('.png')).length;
+    }
   }
 
-  // 2. Disk fallback (works if files haven't been wiped yet)
-  const imageDir = path.join(IMAGES_DIR, postId);
-  if (fs.existsSync(imageDir)) {
-    const images = fs.readdirSync(imageDir)
-      .filter(f => f.endsWith('.png'))
-      .sort((a, b) => parseInt(a.match(/\d+/)) - parseInt(b.match(/\d+/)))
-      .map(img => `/images/${postId}/${img}`);
-    if (images.length > 0) return res.json({ images, post_id: postId });
+  if (count === 0) {
+    return res.json({ images: [], post_id: postId });
   }
 
-  // 3. Nothing found
-  res.json({ images: [], post_id: postId });
+  // Return URL paths — browser fetches each as a normal <img src> request
+  const images = Array.from({ length: count }, (_, i) => `/images/${postId}/slide_${i + 1}.png`);
+  res.json({ images, post_id: postId });
 });
 
 

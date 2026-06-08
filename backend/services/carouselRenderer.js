@@ -211,24 +211,26 @@ function wrapText(ctx, text, maxWidth) {
 }
 
 /**
- * fitTitle — OS-agnostic title renderer.
- * Iteratively reduces font size (step -4px) until EVERY wrapped line
- * fits within safeWidth as measured on THIS server's canvas context.
- * Guarantees no clipping on Linux (Render) or Windows (local dev).
+ * fitTitle — cross-platform title renderer.
+ * Uses a conservative inner wrap width (WRAP_FACTOR of safeWidth) so that
+ * Linux/Skia font metrics (which can differ from Windows GDI) never cause
+ * visual overflow on the right edge of the canvas.
  */
 function fitTitle(ctx, text, weight, maxSize, minSize, safeWidth, maxLines) {
+  // Wrap conservatively: Skia/Linux can render ~10-15% wider than it measures.
+  // Using 82% gives enough margin without making text too small.
+  const wrapWidth = Math.round(safeWidth * 0.82);
   let fontSize = maxSize;
   while (fontSize >= minSize) {
     ctx.font = `${weight} ${fontSize}px Arial`;
-    const lines = wrapText(ctx, text, safeWidth);
-    const allFit = lines.every(l => ctx.measureText(l).width <= safeWidth);
-    if (allFit && lines.length <= maxLines) {
+    const lines = wrapText(ctx, text, wrapWidth);
+    if (lines.length <= maxLines) {
       return { lines, fontSize, lineHeight: Math.round(fontSize * 1.2) };
     }
     fontSize -= 4;
   }
   ctx.font = `${weight} ${minSize}px Arial`;
-  const lines = wrapText(ctx, text, safeWidth);
+  const lines = wrapText(ctx, text, wrapWidth);
   return { lines, fontSize: minSize, lineHeight: Math.round(minSize * 1.2) };
 }
 
@@ -335,7 +337,7 @@ function drawSlide1(ctx, slideData, postData) {
   // ─── MAIN TITLE — fitTitle() auto-adjusts font size on THIS server
   // safeWidth=880 (WIDTH-200) gives generous padding so no char touches edge
   const rawTitle = stripEmoji(slideData.title || postData.headline || '');
-  const t1 = fitTitle(ctx, rawTitle, '900', 76, 36, WIDTH - 200, 4);
+  const t1 = fitTitle(ctx, rawTitle, '900', 68, 32, WIDTH - 200, 4);
   ctx.textAlign = 'left';
   let titleY = 368;
   t1.lines.forEach(line => {
@@ -392,7 +394,7 @@ function drawSlide2(ctx, slideData, postData) {
   
   // Title — fitTitle() OS-agnostic
   const rawTitle2 = stripEmoji(slideData.title || 'What Is This?');
-  const t2 = fitTitle(ctx, rawTitle2, '900', 68, 32, WIDTH - 200, 3);
+  const t2 = fitTitle(ctx, rawTitle2, '900', 60, 28, WIDTH - 200, 3);
   ctx.fillStyle = COLORS.text_primary;
   let yPos = 230;
   t2.lines.forEach(line => {
@@ -456,7 +458,7 @@ function drawSlide3(ctx, slideData, postData) {
 
   // Title — fitTitle() OS-agnostic
   const rawTitle3 = stripEmoji(slideData.title || 'What Does This Actually Mean?');
-  const t3 = fitTitle(ctx, rawTitle3, '900', 66, 32, WIDTH - 200, 3);
+  const t3 = fitTitle(ctx, rawTitle3, '900', 60, 28, WIDTH - 200, 3);
   ctx.fillStyle = COLORS.text_primary;
   let yPos = 210;
   t3.lines.forEach(line => {
@@ -519,7 +521,7 @@ function drawSlide4(ctx, slideData, postData) {
 
   // Title — fitTitle() OS-agnostic
   const rawTitle4 = stripEmoji(slideData.title || 'Why YOU Should Care');
-  const t4 = fitTitle(ctx, rawTitle4, '900', 66, 32, WIDTH - 200, 3);
+  const t4 = fitTitle(ctx, rawTitle4, '900', 60, 28, WIDTH - 200, 3);
   ctx.fillStyle = COLORS.text_primary;
   let yPos = 210;
   t4.lines.forEach(line => {
@@ -576,7 +578,7 @@ function drawSlide5(ctx, slideData, postData) {
 
   // Title — fitTitle() OS-agnostic
   const rawTitle5 = stripEmoji(slideData.title || 'How It Actually Works');
-  const t5 = fitTitle(ctx, rawTitle5, '900', 66, 32, WIDTH - 200, 3);
+  const t5 = fitTitle(ctx, rawTitle5, '900', 60, 28, WIDTH - 200, 3);
   ctx.fillStyle = COLORS.text_primary;
   let yPos = 210;
   t5.lines.forEach(line => {
