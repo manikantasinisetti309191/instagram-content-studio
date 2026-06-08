@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#7c3aed" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Content Studio" />
+
+  <title>Content Studio — @learnwithmanii</title>
+  <meta name="description" content="AI-powered Instagram content generator. Generate, review and publish from your phone." />
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+  <!-- App Shell -->
+  <div id="app">
+
+    <!-- ==================== SCREEN: HOME ==================== -->
+    <div id="screen-home" class="screen active">
+      <div class="screen-content">
+
+        <!-- Header -->
+        <header class="app-header">
+          <div class="header-left">
+            <div class="avatar">M</div>
+            <div class="header-titles">
+              <span class="header-handle">@learnwithmanii</span>
+              <span class="header-sub">Content Studio</span>
+            </div>
+          </div>
+          <div class="header-right">
+            <div id="statusPill" class="status-pill idle">
+              <span class="status-dot-small"></span>
+              <span id="statusPillText">Ready</span>
+            </div>
+          </div>
+        </header>
+
+        <!-- Last Post Card -->
+        <div class="section-label">LAST GENERATED</div>
+        <div id="lastPostCard" class="last-post-card">
+          <div class="last-post-empty">
+            <div class="empty-icon">✨</div>
+            <div class="empty-title">No posts yet</div>
+            <div class="empty-sub">Tap Generate to create your first post</div>
+          </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <div id="stat-generated" class="stat-value">0</div>
+            <div class="stat-label">Generated</div>
+          </div>
+          <div class="stat-card">
+            <div id="stat-published" class="stat-value">0</div>
+            <div class="stat-label">Published</div>
+          </div>
+          <div class="stat-card">
+            <div id="stat-today" class="stat-value">—</div>
+            <div class="stat-label">Today</div>
+          </div>
+        </div>
+
+        <!-- Generate Button — The BIG CTA -->
+        <button id="generateBtn" class="generate-btn" onclick="startGenerate()">
+          <div class="generate-btn-inner">
+            <span class="generate-icon">⚡</span>
+            <span class="generate-label">Generate Post</span>
+            <span class="generate-sub">AI researches &amp; creates slides</span>
+          </div>
+        </button>
+
+        <!-- Quick tip -->
+        <div class="tip-card">
+          <span class="tip-icon">💡</span>
+          <span class="tip-text">Tap Generate → Review slides → Publish when ready. You're in full control.</span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ==================== SCREEN: GENERATING ==================== -->
+    <div id="screen-generating" class="screen">
+      <div class="screen-content centered">
+
+        <div class="gen-hero">
+          <div class="gen-orbit">
+            <div class="gen-planet"></div>
+          </div>
+          <div id="genMainIcon" class="gen-main-icon">🔍</div>
+        </div>
+
+        <div id="genTitle" class="gen-title">Researching AI News</div>
+        <div id="genSub" class="gen-sub">Scanning 13+ news sources...</div>
+
+        <!-- Progress Steps -->
+        <div class="progress-steps">
+          <div id="pstep-research" class="p-step active">
+            <div class="p-step-icon">🔍</div>
+            <div class="p-step-label">Research</div>
+            <div class="p-step-bar"><div class="p-step-fill"></div></div>
+          </div>
+          <div id="pstep-content" class="p-step">
+            <div class="p-step-icon">✍️</div>
+            <div class="p-step-label">Writing</div>
+            <div class="p-step-bar"><div class="p-step-fill"></div></div>
+          </div>
+          <div id="pstep-quality" class="p-step">
+            <div class="p-step-icon">✅</div>
+            <div class="p-step-label">Quality</div>
+            <div class="p-step-bar"><div class="p-step-fill"></div></div>
+          </div>
+          <div id="pstep-render" class="p-step">
+            <div class="p-step-icon">🎨</div>
+            <div class="p-step-label">Render</div>
+            <div class="p-step-bar"><div class="p-step-fill"></div></div>
+          </div>
+        </div>
+
+        <!-- Log stream -->
+        <div class="gen-log-box">
+          <div id="genLogStream" class="gen-log-stream">
+            <div class="log-line info">⏳ Starting pipeline...</div>
+          </div>
+        </div>
+
+        <button class="cancel-btn" onclick="showScreen('home')">Cancel</button>
+      </div>
+    </div>
+
+    <!-- ==================== SCREEN: REVIEW ==================== -->
+    <div id="screen-review" class="screen">
+
+      <!-- Review Header -->
+      <div class="review-header">
+        <button class="back-btn" onclick="showScreen('home')">‹ Back</button>
+        <div class="review-header-title">Review Post</div>
+        <div id="reviewPostBadge" class="review-badge preview">Preview</div>
+      </div>
+
+      <!-- Headline -->
+      <div class="review-headline-wrap">
+        <span id="reviewEmoji" class="review-emoji">🤖</span>
+        <div id="reviewHeadline" class="review-headline">Loading...</div>
+        <div id="reviewCategory" class="review-category">AI News</div>
+      </div>
+
+      <!-- Carousel -->
+      <div class="carousel-wrapper">
+        <div id="carouselTrack" class="carousel-track">
+          <!-- Slides injected here -->
+        </div>
+        <div id="carouselDots" class="carousel-dots"></div>
+        <div id="slideCounter" class="slide-counter">1 / 10</div>
+      </div>
+
+      <!-- Caption Section -->
+      <div class="caption-section">
+        <div class="caption-section-header">
+          <span class="caption-label">📝 Caption</span>
+          <button class="copy-btn" onclick="copyCaption()">Copy</button>
+        </div>
+        <div id="captionBox" class="caption-box">Loading caption...</div>
+
+        <div class="caption-section-header" style="margin-top:16px">
+          <span class="caption-label"># Hashtags</span>
+          <button class="copy-btn" onclick="copyHashtags()">Copy All</button>
+        </div>
+        <div id="hashtagBox" class="hashtag-box"></div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-strip">
+        <button class="action-btn danger" onclick="showRegenerateConfirm()">
+          <span>🔄</span>
+          <span>New Topic</span>
+        </button>
+        <button class="action-btn secondary" onclick="showEditPanel()">
+          <span>✏️</span>
+          <span>Edit</span>
+        </button>
+        <button id="publishBtn" class="action-btn primary" onclick="showPublishConfirm()">
+          <span>🚀</span>
+          <span>Publish</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- ==================== SCREEN: HISTORY ==================== -->
+    <div id="screen-history" class="screen">
+      <div class="screen-content">
+        <div class="page-title">History</div>
+        <div id="historyList" class="history-list">
+          <div class="empty-state-full">
+            <div class="empty-icon">📜</div>
+            <div>No posts yet</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== SCREEN: SETTINGS ==================== -->
+    <div id="screen-settings" class="screen">
+      <div class="screen-content">
+        <div class="page-title">Settings</div>
+
+        <div class="settings-section">
+          <div class="settings-label">ACCOUNT</div>
+          <div class="settings-card">
+            <div class="settings-row">
+              <span class="settings-key">Instagram</span>
+              <span class="settings-val">@learnwithmanii</span>
+            </div>
+            <div class="settings-row">
+              <span class="settings-key">Mode</span>
+              <span id="settings-mode" class="settings-val green">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-label">SYSTEM</div>
+          <div class="settings-card">
+            <div class="settings-row">
+              <span class="settings-key">Server Status</span>
+              <span id="settings-server" class="settings-val">Checking...</span>
+            </div>
+            <div class="settings-row">
+              <span class="settings-key">Version</span>
+              <span class="settings-val">2.0 Mobile</span>
+            </div>
+            <div class="settings-row">
+              <span class="settings-key">Auto-Run</span>
+              <span class="settings-val red">Disabled ✅</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-label">INSTALL APP</div>
+          <div class="settings-card install-card">
+            <div class="install-steps">
+              <div class="install-step">
+                <span class="install-num">1</span>
+                <span>Open this page in <strong>Chrome</strong> on your Android phone</span>
+              </div>
+              <div class="install-step">
+                <span class="install-num">2</span>
+                <span>Tap the <strong>⋮ menu</strong> (top right)</span>
+              </div>
+              <div class="install-step">
+                <span class="install-num">3</span>
+                <span>Tap <strong>"Add to Home screen"</strong></span>
+              </div>
+              <div class="install-step">
+                <span class="install-num">4</span>
+                <span>Done! It opens like a native app 🎉</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ==================== BOTTOM NAV ==================== -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" id="nav-home" onclick="showScreen('home')">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">Home</span>
+      </button>
+      <button class="nav-item" id="nav-review" onclick="goToReview()">
+        <span class="nav-icon">👁️</span>
+        <span class="nav-label">Review</span>
+      </button>
+      <button class="nav-item" id="nav-history" onclick="showScreen('history')">
+        <span class="nav-icon">📋</span>
+        <span class="nav-label">History</span>
+      </button>
+      <button class="nav-item" id="nav-settings" onclick="showScreen('settings')">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">Settings</span>
+      </button>
+    </nav>
+
+  </div><!-- /#app -->
+
+  <!-- ==================== OVERLAY: EDIT PANEL ==================== -->
+  <div id="editOverlay" class="overlay hidden">
+    <div class="overlay-backdrop" onclick="closeEditPanel()"></div>
+    <div class="edit-panel slide-up">
+      <div class="edit-panel-header">
+        <div class="edit-panel-title">✏️ Edit Content</div>
+        <button class="edit-close" onclick="closeEditPanel()">✕</button>
+      </div>
+      <div class="edit-panel-body">
+        <div class="edit-instruction">Tell the AI what to change:</div>
+        <div class="edit-examples">
+          <button class="example-chip" onclick="setEditText('Make it simpler and easier to understand')">Simpler language</button>
+          <button class="example-chip" onclick="setEditText('Make it more engaging and exciting')">More exciting</button>
+          <button class="example-chip" onclick="setEditText('Add more specific examples and stats')">More examples</button>
+          <button class="example-chip" onclick="setEditText('Shorten the captions, keep it punchy')">Shorter text</button>
+        </div>
+        <textarea id="editInput" class="edit-textarea" placeholder="e.g. Make the headline more catchy, or add more details about how this affects students..."></textarea>
+        <button id="editSubmitBtn" class="edit-submit-btn" onclick="submitEdit()">
+          <span>✨ Apply Changes</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== OVERLAY: CONFIRM REGENERATE ==================== -->
+  <div id="regenOverlay" class="overlay hidden">
+    <div class="overlay-backdrop" onclick="closeRegenConfirm()"></div>
+    <div class="confirm-panel slide-up">
+      <div class="confirm-icon">🔄</div>
+      <div class="confirm-title">Generate New Topic?</div>
+      <div class="confirm-sub">The current content will be replaced. AI will research and create a completely different topic.</div>
+      <button class="confirm-btn primary" onclick="triggerRegenerate()">Yes, New Topic</button>
+      <button class="confirm-btn ghost" onclick="closeRegenConfirm()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ==================== OVERLAY: CONFIRM PUBLISH ==================== -->
+  <div id="publishOverlay" class="overlay hidden">
+    <div class="overlay-backdrop" onclick="closePublishConfirm()"></div>
+    <div class="confirm-panel slide-up">
+      <div class="confirm-icon">🚀</div>
+      <div class="confirm-title">Publish to Instagram?</div>
+      <div class="confirm-sub">This will post to <strong>@learnwithmanii</strong> right now. This cannot be undone.</div>
+      <button id="confirmPublishBtn" class="confirm-btn primary" onclick="submitPublish()">Yes, Publish Now</button>
+      <button class="confirm-btn ghost" onclick="closePublishConfirm()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ==================== TOAST ==================== -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
