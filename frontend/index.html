@@ -25,6 +25,19 @@
 </head>
 <body>
 
+  <!-- ==================== SPLASH SCREEN ==================== -->
+  <div id="splashScreen" class="splash-screen">
+    <div class="splash-inner">
+      <div class="splash-logo">⚡</div>
+      <div class="splash-title">Content Studio</div>
+      <div class="splash-sub">@learnwithmanii</div>
+      <div id="splashStatus" class="splash-status">Connecting...</div>
+      <div class="splash-dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
   <!-- App Shell -->
   <div id="app">
 
@@ -138,7 +151,7 @@
           </div>
         </div>
 
-        <button class="cancel-btn" onclick="showScreen('home')">Cancel</button>
+        <button class="cancel-btn" onclick="cancelGenerate()">Running in background →</button>
       </div>
     </div>
 
@@ -350,6 +363,22 @@
 
   <!-- ==================== TOAST ==================== -->
   <div id="toastContainer" class="toast-container"></div>
+
+  <!-- ==================== OVERLAY: PUBLISH SUCCESS ==================== -->
+  <div id="successOverlay" class="overlay hidden">
+    <div class="success-panel">
+      <div class="success-confetti">🎉</div>
+      <div class="success-title">Published!</div>
+      <div id="successHeadline" class="success-headline"></div>
+      <div id="successPostId" class="success-post-id"></div>
+      <a id="successLinkBtn" class="success-link-btn" target="_blank" rel="noopener">
+        🔗 View on Instagram
+      </a>
+      <button class="confirm-btn primary" onclick="closeSuccessOverlay()" style="margin-top:8px">
+        Done
+      </button>
+    </div>
+  </div>
 
   <script src="/app.js"></script>
 </body>

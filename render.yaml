@@ -22,6 +22,9 @@ services:
         sync: false
       - key: AUTO_SCHEDULE
         value: "false"
+      - key: PUBLIC_BASE_URL
+        value: ""   # Set this to your Render service URL after first deploy, e.g. https://your-app.onrender.com
+
     healthCheckPath: /api/status
     disk:
       name: data

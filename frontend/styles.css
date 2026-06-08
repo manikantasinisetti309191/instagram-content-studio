@@ -713,6 +713,135 @@ body {
 @keyframes toastIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes toastOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(16px); } }
 
+/* ==================== REVIEW SCREEN SCROLL FIX ==================== */
+/* Make headline+carousel+caption scrollable so action strip stays fixed at bottom */
+#screen-review {
+  display: flex !important;
+  flex-direction: column;
+}
+.review-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ==================== SPLASH SCREEN ==================== */
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.4s ease;
+}
+.splash-screen.hidden { display: none; }
+.splash-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+.splash-logo {
+  font-size: 64px;
+  animation: float 2s ease-in-out infinite;
+  margin-bottom: 8px;
+}
+.splash-title {
+  font-size: 26px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--purple-light), var(--cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.splash-sub { font-size: 13px; color: var(--text3); }
+.splash-status {
+  font-size: 12px;
+  color: var(--text3);
+  margin-top: 24px;
+  min-height: 18px;
+}
+.splash-dots {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+.splash-dots span {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--purple);
+  animation: dotBounce 1.2s ease-in-out infinite;
+}
+.splash-dots span:nth-child(2) { animation-delay: 0.2s; background: var(--cyan); }
+.splash-dots span:nth-child(3) { animation-delay: 0.4s; background: var(--pink); }
+@keyframes dotBounce {
+  0%,80%,100% { transform: translateY(0); opacity: 0.5; }
+  40% { transform: translateY(-8px); opacity: 1; }
+}
+
+/* ==================== PUBLISH SUCCESS OVERLAY ==================== */
+.success-panel {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px calc(40px + var(--safe-bottom));
+  gap: 14px;
+  text-align: center;
+  animation: successIn 0.5s cubic-bezier(0.16,1,0.3,1);
+}
+@keyframes successIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+.success-confetti {
+  font-size: 72px;
+  animation: confettiBounce 0.6s cubic-bezier(0.36,0.07,0.19,0.97) both;
+}
+@keyframes confettiBounce {
+  0%  { transform: scale(0) rotate(-10deg); }
+  60% { transform: scale(1.2) rotate(5deg); }
+  100%{ transform: scale(1) rotate(0deg); }
+}
+.success-title {
+  font-size: 32px;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--green), var(--cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.success-headline {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.4;
+  max-width: 300px;
+}
+.success-post-id {
+  font-size: 11px;
+  color: var(--text3);
+  font-family: 'Courier New', monospace;
+}
+.success-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #405de6, #833ab4, #e1306c);
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  text-decoration: none;
+  margin-top: 8px;
+  box-shadow: 0 6px 20px rgba(224,48,108,0.4);
+}
+.success-link-btn:active { opacity: 0.85; }
+
 /* ==================== TEXT SLIDE STYLES ==================== */
 .ts-label {
   font-size: 9px; font-weight: 700; letter-spacing: 2px;

@@ -1,39 +1,66 @@
 /**
- * Content Studio — Mobile PWA App Logic
- * Handles all screens, API calls, WebSocket, carousel touch gestures
+ * Content Studio — Mobile PWA App Logic v2.1
+ * Fixes: strict-mode const-in-switch, history JSON bug, carousel touch,
+ *        WS polling fallback, server wake-up UX, review scroll, publish success
  */
 'use strict';
 
 // ==================== STATE ====================
 const S = {
-  ws: null,
-  wsRetries: 0,
-  wsTimer: null,
-  currentPost: null,
-  allPosts: [],
-  currentSlide: 0,
-  totalSlides: 0,
-  touchStartX: 0,
-  touchStartY: 0,
-  isGenerating: false,
-  isPublishing: false,
-  isEditing: false,
+  ws: null, wsRetries: 0, wsTimer: null,
+  currentPost: null, allPosts: [],
+  currentSlide: 0, totalSlides: 0,
+  touchStartX: 0, touchStartY: 0,
+  isGenerating: false, isPublishing: false,
+  pollTimer: null,
+  historyPosts: [],   // indexed store to avoid JSON-in-onclick bugs
+  serverOnline: false,
 };
 
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', () => {
   registerServiceWorker();
+  showSplash();
   connectWebSocket();
-  loadLatestPost();
-  loadHistory();
-  checkStatus();
-  setupCarouselTouch();
+  bootLoad();
   setInterval(checkStatus, 30000);
 });
 
 function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
+}
+
+async function bootLoad() {
+  // Show "waking up" state if server cold-starts (Render free tier)
+  let retries = 0;
+  while (retries < 8) {
+    try {
+      await checkStatus();
+      if (S.serverOnline) break;
+    } catch (_) {}
+    retries++;
+    setEl('splashStatus', retries < 3 ? 'Connecting...' : '☕ Waking up server (~20 sec)...');
+    await sleep(retries < 3 ? 1500 : 3000);
+  }
+  hideSplash();
+  await loadLatestPost();
+  loadHistory();
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ==================== SPLASH ====================
+function showSplash() {
+  const el = document.getElementById('splashScreen');
+  if (el) el.classList.remove('hidden');
+}
+function hideSplash() {
+  const el = document.getElementById('splashScreen');
+  if (el) {
+    el.style.opacity = '0';
+    setTimeout(() => el.classList.add('hidden'), 400);
   }
 }
 
@@ -45,12 +72,10 @@ function showScreen(name) {
     const el = document.getElementById(`screen-${s}`);
     if (el) el.classList.toggle('active', s === name);
   });
-  // Update bottom nav
   ['home', 'review', 'history', 'settings'].forEach(s => {
     const btn = document.getElementById(`nav-${s}`);
     if (btn) btn.classList.toggle('active', s === name);
   });
-  // Special: review nav active when on generating too
   if (name === 'generating') {
     document.getElementById('nav-home')?.classList.add('active');
   }
@@ -60,8 +85,7 @@ function goToReview() {
   if (S.currentPost) {
     showScreen('review');
   } else {
-    showScreen('home');
-    showToast('No post to review yet — tap Generate first', 'error');
+    showToast('No post yet — tap Generate first', 'error');
   }
 }
 
@@ -70,13 +94,8 @@ function connectWebSocket() {
   try {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     S.ws = new WebSocket(`${protocol}//${window.location.host}`);
-    S.ws.onopen = () => {
-      S.wsRetries = 0;
-      console.log('WS connected');
-    };
-    S.ws.onmessage = e => {
-      try { handleWS(JSON.parse(e.data)); } catch (_) {}
-    };
+    S.ws.onopen = () => { S.wsRetries = 0; };
+    S.ws.onmessage = e => { try { handleWS(JSON.parse(e.data)); } catch (_) {} };
     S.ws.onclose = () => scheduleWsReconnect();
     S.ws.onerror = () => S.ws.close();
   } catch (_) { scheduleWsReconnect(); }
@@ -91,29 +110,20 @@ function scheduleWsReconnect() {
 function handleWS(data) {
   switch (data.type) {
     case 'step_start':
-    case 'step_complete':
+    case 'step_complete': {
       updateGenStep(data.step, data.type === 'step_complete' ? 'done' : 'active');
       addGenLog(data.message || `${data.step} ${data.type === 'step_complete' ? 'done' : 'started'}`, 'info');
       break;
-
+    }
     case 'pipeline_complete':
-    case 'slides_ready_for_review':
-      S.isGenerating = false;
-      setStatusPill('done', '✓ Ready');
-      addGenLog('🎉 Slides ready! Loading...', 'success');
-      document.getElementById('generateBtn')?.removeAttribute('disabled');
-      setTimeout(async () => {
-        await loadLatestPost();
-        if (S.currentPost) {
-          showScreen('review');
-          showToast('🎉 Slides ready! Review and publish when happy 👇', 'success');
-        }
-      }, 1200);
+    case 'slides_ready_for_review': {
+      finishGenerating();
       break;
-
+    }
     case 'regenerate_complete':
-    case 'edit_complete':
+    case 'edit_complete': {
       S.isGenerating = false;
+      stopPollFallback();
       setStatusPill('done', '✓ Ready');
       addGenLog('✅ Done! New content ready.', 'success');
       setTimeout(async () => {
@@ -122,38 +132,67 @@ function handleWS(data) {
         showToast('✅ Content updated!', 'success');
       }, 1200);
       break;
-
-    case 'publish_complete':
+    }
+    case 'publish_complete': {
       S.isPublishing = false;
-      showToast('🎉 Published to Instagram!', 'success');
       closePublishConfirm();
-      const pubBtn = document.getElementById('publishBtn');
-      if (pubBtn) {
-        pubBtn.innerHTML = '<span>✅</span><span>Published!</span>';
-        pubBtn.disabled = true;
-        pubBtn.className = 'action-btn secondary';
-      }
-      const badge = document.getElementById('reviewPostBadge');
-      if (badge) { badge.textContent = 'Published'; badge.className = 'review-badge published'; }
+      const igId = data.instagram_post_id || '';
+      showPublishSuccess(igId, data.headline || S.currentPost?.headline || '');
       loadLatestPost();
       break;
-
+    }
     case 'publish_error':
     case 'edit_error':
-    case 'regenerate_error':
+    case 'regenerate_error': {
       S.isGenerating = false;
       S.isPublishing = false;
+      stopPollFallback();
       setStatusPill('error', 'Error');
+      closePublishConfirm();
       showToast('❌ ' + (data.message || 'Something went wrong'), 'error');
       document.getElementById('generateBtn')?.removeAttribute('disabled');
       break;
-
-    case 'pipeline_error':
+    }
+    case 'pipeline_error': {
       S.isGenerating = false;
+      stopPollFallback();
       setStatusPill('error', 'Error');
       addGenLog('❌ Error: ' + (data.error || 'Unknown'), 'error');
       document.getElementById('generateBtn')?.removeAttribute('disabled');
       break;
+    }
+  }
+}
+
+// ==================== WS POLLING FALLBACK ====================
+// If WS drops mid-generation (cell signal, screen lock), poll every 5s
+function startPollFallback() {
+  stopPollFallback();
+  S.pollTimer = setInterval(async () => {
+    if (!S.isGenerating && !S.isPublishing) { stopPollFallback(); return; }
+    try {
+      const data = await api('/api/status');
+      if (data.pipeline?.status === 'idle' && S.isGenerating) {
+        finishGenerating();
+      }
+    } catch (_) {}
+  }, 5000);
+}
+
+function stopPollFallback() {
+  if (S.pollTimer) { clearInterval(S.pollTimer); S.pollTimer = null; }
+}
+
+async function finishGenerating() {
+  S.isGenerating = false;
+  stopPollFallback();
+  setStatusPill('done', '✓ Ready');
+  addGenLog('🎉 Slides ready! Loading...', 'success');
+  document.getElementById('generateBtn')?.removeAttribute('disabled');
+  await loadLatestPost();
+  if (S.currentPost) {
+    showScreen('review');
+    showToast('🎉 Slides ready! Review & publish when happy 👇', 'success');
   }
 }
 
@@ -161,17 +200,17 @@ function handleWS(data) {
 async function checkStatus() {
   try {
     const data = await api('/api/status');
+    S.serverOnline = true;
     const mode = data.instagram_configured ? 'Live Mode 🟢' : 'Preview Mode 🟡';
-    const el = document.getElementById('settings-mode');
-    if (el) el.textContent = mode;
+    setEl('settings-mode', mode);
     const srv = document.getElementById('settings-server');
     if (srv) { srv.textContent = 'Online ✅'; srv.className = 'settings-val green'; }
-
     if (data.pipeline?.status === 'running' && !S.isGenerating) {
       S.isGenerating = true;
       setStatusPill('running', 'Running...');
     }
   } catch (_) {
+    S.serverOnline = false;
     const srv = document.getElementById('settings-server');
     if (srv) { srv.textContent = 'Offline ⚠️'; srv.className = 'settings-val red'; }
   }
@@ -188,10 +227,9 @@ async function loadLatestPost() {
     S.currentPost = post;
     S.allPosts = posts;
 
-    // Update last post card on home
     renderLastPostCard(post, data);
 
-    // Update stats
+    // Stats from /api/posts (now flat list of post objects)
     const allPostFiles = await api('/api/posts').catch(() => ({ posts: [] }));
     const allP = allPostFiles.posts || [];
     const pub = allP.filter(p => p.instagram_post_id && !p.instagram_post_id.startsWith('PREVIEW')).length;
@@ -199,12 +237,8 @@ async function loadLatestPost() {
     setEl('stat-published', pub);
     setEl('stat-today', post ? '1' : '—');
 
-    // Pre-fill review screen
-    populateReviewScreen(post);
-
-    // Load history
     renderHistory(allP);
-
+    populateReviewScreen(post);
     return post;
   } catch (_) {}
 }
@@ -212,11 +246,11 @@ async function loadLatestPost() {
 function renderLastPostCard(post, data) {
   const card = document.getElementById('lastPostCard');
   if (!card) return;
-
   const isPublished = post.instagram_post_id && !post.instagram_post_id.startsWith('PREVIEW');
   const runDate = data.content?.generated_at || '';
-  const timeStr = runDate ? new Date(runDate).toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
-
+  const timeStr = runDate
+    ? new Date(runDate).toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })
+    : '';
   card.className = 'last-post-card has-content';
   card.onclick = () => { populateReviewScreen(post); showScreen('review'); };
   card.innerHTML = `
@@ -263,7 +297,6 @@ async function populateReviewScreen(post) {
     }
   }
 
-  // Try to load images first
   await loadCarouselImages(post);
 
   // Caption
@@ -271,7 +304,8 @@ async function populateReviewScreen(post) {
   if (caption) {
     const captionEl = document.getElementById('captionBox');
     if (captionEl) captionEl.textContent =
-      caption.full_caption || [caption.hook, caption.body, caption.engagement_prompt, caption.call_to_action].filter(Boolean).join('\n\n');
+      caption.full_caption ||
+      [caption.hook, caption.body, caption.engagement_prompt, caption.call_to_action].filter(Boolean).join('\n\n');
   }
 
   // Hashtags
@@ -281,6 +315,9 @@ async function populateReviewScreen(post) {
       `<span class="h-tag" onclick="copyText('${esc(t)}')">${esc(t)}</span>`
     ).join('');
   }
+
+  // Re-attach touch events for the newly rendered carousel
+  setupCarouselTouch();
 }
 
 async function loadCarouselImages(post) {
@@ -294,7 +331,7 @@ async function loadCarouselImages(post) {
       S.totalSlides = data.images.length;
       track.innerHTML = data.images.map((img, i) =>
         `<div class="carousel-slide ${i === 0 ? 'active' : ''}">
-          <img src="${img}?t=${Date.now()}" alt="Slide ${i+1}" loading="lazy" />
+          <img src="${img}?t=${Date.now()}" alt="Slide ${i+1}" loading="lazy" onclick="openFullScreen('${img}')" />
         </div>`
       ).join('');
       if (dots) dots.innerHTML = data.images.map((_, i) =>
@@ -305,7 +342,6 @@ async function loadCarouselImages(post) {
     }
   } catch (_) {}
 
-  // Fallback: text slides
   renderTextSlides(post);
 }
 
@@ -323,7 +359,6 @@ function renderTextSlides(post) {
   const bgColors = ['#0a1628','#14082a','#1a0812','#081a10','#0a1828','#14101a','#0f1a20','#1a0a14','#0a1820','#14082a'];
   const accents = ['#00d4ff','#7c3aed','#ff006e','#00ff88','#00d4ff','#7c3aed','#ff006e','#00ff88','#00d4ff','#7c3aed'];
   const labels = ['BREAKING','EXPLAINER','WHY IT MATTERS','HOW TO USE','BOTTOM LINE','DEEP DIVE','IMPACT','STRATEGY','KEY INSIGHT','TAKE ACTION'];
-
   const slides = Object.entries(post.slides);
   S.totalSlides = slides.length;
 
@@ -349,7 +384,7 @@ function formatTextSlide(num, slide, post) {
     case 0: return `<div style="font-size:28px;margin-bottom:12px">${post.emoji||'🤖'}</div><div class="ts-title">${esc(slide.title||'')}</div><div class="ts-sub">${esc(slide.subtitle||'')}</div>`;
     case 1: return `<div class="ts-title" style="font-size:16px">${esc(slide.title||'')}</div>${[slide.bullet_1,slide.bullet_2,slide.bullet_3].filter(Boolean).map(b=>`<div class="ts-bullet" style="border-left:2px solid #7c3aed">${esc(b)}</div>`).join('')}`;
     case 2: return `<div class="ts-title" style="font-size:16px">${esc(slide.title||'')}</div><div class="ts-accent" style="color:#ff006e">${esc(slide.impact_statement||'')}</div><div class="ts-sub">${esc(slide.detail||'')}</div>`;
-    case 3: return `<div class="ts-title" style="font-size:16px">${esc(slide.title||'')}</div>${[slide.use_case_1,slide.use_case_2,slide.use_case_3].filter(Boolean).map((u,i)=>`<div class="ts-bullet"><span style="color:#00ff88;font-weight:700">${i+1}.</span> ${esc(u)}</div>`).join('')}`;
+    case 3: return `<div class="ts-title" style="font-size:16px">${esc(slide.title||'')}</div>${[slide.use_case_1,slide.use_case_2,slide.use_case_3].filter(Boolean).map((u,i2)=>`<div class="ts-bullet"><span style="color:#00ff88;font-weight:700">${i2+1}.</span> ${esc(u)}</div>`).join('')}`;
     case 4: return `<div class="ts-title">${esc(slide.title||'')}</div><div class="ts-sub" style="margin-bottom:16px">${esc(slide.summary||'')}</div><div class="ts-cta">${esc(slide.cta_question||'Follow for daily AI insights')}</div>`;
     default: return `<div class="ts-title" style="font-size:15px">${esc(slide.title||`Slide ${num+1}`)}</div><div class="ts-sub">${esc(slide.content||slide.subtitle||slide.detail||'')}</div>`;
   }
@@ -359,13 +394,16 @@ function formatTextSlide(num, slide, post) {
 function setupCarouselTouch() {
   const wrapper = document.querySelector('.carousel-wrapper');
   if (!wrapper) return;
+  // Remove old listeners by cloning
+  const newWrapper = wrapper.cloneNode(true);
+  wrapper.parentNode.replaceChild(newWrapper, wrapper);
 
-  wrapper.addEventListener('touchstart', e => {
+  newWrapper.addEventListener('touchstart', e => {
     S.touchStartX = e.touches[0].clientX;
     S.touchStartY = e.touches[0].clientY;
   }, { passive: true });
 
-  wrapper.addEventListener('touchend', e => {
+  newWrapper.addEventListener('touchend', e => {
     const dx = e.changedTouches[0].clientX - S.touchStartX;
     const dy = e.changedTouches[0].clientY - S.touchStartY;
     if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
@@ -386,32 +424,42 @@ function changeSlide(dir) {
   updateSlideCounter();
 }
 
-function goToSlide(index) {
-  changeSlide(index - S.currentSlide);
-}
+function goToSlide(index) { changeSlide(index - S.currentSlide); }
 
 function updateSlideCounter() {
   const slides = document.querySelectorAll('.carousel-slide');
   setEl('slideCounter', `${S.currentSlide + 1} / ${slides.length || S.totalSlides}`);
 }
 
+// ==================== FULLSCREEN SLIDE ====================
+window.openFullScreen = function(imgSrc) {
+  let overlay = document.getElementById('fullscreenOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'fullscreenOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
+    overlay.onclick = () => overlay.remove();
+    document.body.appendChild(overlay);
+  }
+  overlay.innerHTML = `<img src="${imgSrc}" style="max-width:100%;max-height:100%;object-fit:contain;" />`;
+};
+
 // ==================== GENERATE ====================
 window.startGenerate = async function() {
   if (S.isGenerating) { showToast('Already generating...', 'error'); return; }
-
   try {
     const btn = document.getElementById('generateBtn');
     if (btn) btn.disabled = true;
     S.isGenerating = true;
-
     showScreen('generating');
     resetGenUI();
     setStatusPill('running', 'Generating...');
-
+    startPollFallback();
     await api('/api/generate', 'POST');
-    addGenLog('✅ Pipeline started — this takes 3-5 minutes', 'success');
+    addGenLog('✅ Pipeline started — takes 3-5 minutes', 'success');
   } catch (err) {
     S.isGenerating = false;
+    stopPollFallback();
     showScreen('home');
     setStatusPill('error', 'Error');
     showToast('❌ Failed to start: ' + (err.message || 'Check server'), 'error');
@@ -427,8 +475,8 @@ function resetGenUI() {
     const el = document.getElementById(`pstep-${s}`);
     if (el) { el.className = 'p-step'; el.querySelector('.p-step-fill').style.width = '0%'; }
   });
-  const doc = document.getElementById('genLogStream');
-  if (doc) doc.innerHTML = '<div class="log-line info">⏳ Starting pipeline...</div>';
+  const logEl = document.getElementById('genLogStream');
+  if (logEl) logEl.innerHTML = '<div class="log-line info">⏳ Starting pipeline...</div>';
   const first = document.getElementById('pstep-research');
   if (first) first.className = 'p-step active';
 }
@@ -438,22 +486,18 @@ function updateGenStep(stepName, state) {
   const idx = map[stepName];
   if (idx === undefined) return;
   const steps = ['research','content','quality','render'];
-
-  // Mark previous as done
   steps.slice(0, idx).forEach(s => {
     const el = document.getElementById(`pstep-${s}`);
     if (el) { el.className = 'p-step done'; el.querySelector('.p-step-fill').style.width = '100%'; }
   });
-  // Update current
   const cur = document.getElementById(`pstep-${steps[idx]}`);
   if (cur) {
     cur.className = `p-step ${state}`;
     cur.querySelector('.p-step-fill').style.width = state === 'done' ? '100%' : '';
   }
-
   const titles = { research:'Researching AI News', filter:'Picking Best Story', content:'Writing Content', quality:'Quality Check', render:'Rendering Slides' };
-  const icons = { research:'🔍', filter:'🎯', content:'✍️', quality:'✅', render:'🎨' };
-  const subs = { research:'Scanning 13+ news sources...', filter:'Selecting the most viral story...', content:'Writing 10 slides + caption...', quality:'Checking all slide fields...', render:'Creating 1080×1080 images...' };
+  const icons  = { research:'🔍', filter:'🎯', content:'✍️', quality:'✅', render:'🎨' };
+  const subs   = { research:'Scanning 13+ news sources...', filter:'Selecting the most viral story...', content:'Writing 10 slides + caption...', quality:'Checking all slide fields...', render:'Creating 1080×1080 images...' };
   if (titles[stepName]) {
     setEl('genTitle', titles[stepName]);
     setEl('genSub', subs[stepName]);
@@ -470,6 +514,15 @@ function addGenLog(msg, type = 'info') {
   el.insertBefore(div, el.firstChild);
   if (el.children.length > 40) el.removeChild(el.lastChild);
 }
+
+// Cancel goes home but KEEPS the generating state visible in status pill
+window.cancelGenerate = function() {
+  showScreen('home');
+  if (S.isGenerating) {
+    setStatusPill('running', 'Running in BG...');
+    showToast('Pipeline still running in background', 'info');
+  }
+};
 
 // ==================== REGENERATE ====================
 window.showRegenerateConfirm = function() {
@@ -489,12 +542,13 @@ window.triggerRegenerate = async function() {
   setEl('genTitle', 'Getting New Topic');
   setEl('genSub', 'Picking a completely different story...');
   setEl('genMainIcon', '🔄');
-
+  startPollFallback();
   try {
     await api('/api/regenerate', 'POST');
     addGenLog('🔄 Fetching a fresh topic...', 'info');
   } catch (err) {
     S.isGenerating = false;
+    stopPollFallback();
     showScreen('review');
     setStatusPill('error', 'Error');
     showToast('❌ Regenerate failed: ' + err.message, 'error');
@@ -511,7 +565,7 @@ window.closeEditPanel = function() {
 };
 window.setEditText = function(text) {
   const el = document.getElementById('editInput');
-  if (el) el.value = text;
+  if (el) { el.value = text; el.focus(); }
 };
 
 window.submitEdit = async function() {
@@ -520,7 +574,7 @@ window.submitEdit = async function() {
   if (!instruction) { showToast('Please describe what to change', 'error'); return; }
 
   const submitBtn = document.getElementById('editSubmitBtn');
-  if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<span>⏳ Applying changes...</span>'; }
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '⏳ Applying...'; }
 
   closeEditPanel();
   S.isGenerating = true;
@@ -531,18 +585,20 @@ window.submitEdit = async function() {
   setEl('genSub', `"${instruction.substring(0, 50)}${instruction.length > 50 ? '...' : ''}"`);
   setEl('genMainIcon', '✏️');
   addGenLog(`✏️ Instruction: "${instruction}"`, 'info');
+  startPollFallback();
 
   try {
     await api('/api/edit-content', 'POST', { instruction });
     addGenLog('⏳ AI is rewriting content...', 'info');
   } catch (err) {
     S.isGenerating = false;
+    stopPollFallback();
     showScreen('review');
     setStatusPill('error', 'Error');
     showToast('❌ Edit failed: ' + err.message, 'error');
   }
 
-  if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<span>✨ Apply Changes</span>'; }
+  if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '✨ Apply Changes'; }
   if (input) input.value = '';
 };
 
@@ -553,28 +609,56 @@ window.showPublishConfirm = function() {
 };
 window.closePublishConfirm = function() {
   document.getElementById('publishOverlay').classList.add('hidden');
+  const btn = document.getElementById('confirmPublishBtn');
+  if (btn) { btn.disabled = false; btn.textContent = 'Yes, Publish Now'; }
 };
 
 window.submitPublish = async function() {
-  if (!S.currentPost) { showToast('No post selected', 'error'); return; }
-  if (S.isPublishing) return;
-
+  if (!S.currentPost || S.isPublishing) return;
   const btn = document.getElementById('confirmPublishBtn');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Publishing...'; }
   S.isPublishing = true;
   setStatusPill('running', 'Publishing...');
-  showToast('🚀 Publishing to Instagram...', 'info');
-
   try {
     await api(`/api/posts/${S.currentPost.post_id}/approve`, 'POST');
-    // WS will handle success/error
+    // WS will call showPublishSuccess on success
   } catch (err) {
     S.isPublishing = false;
     closePublishConfirm();
     setStatusPill('error', 'Error');
     showToast('❌ Publish failed: ' + err.message, 'error');
-    if (btn) { btn.disabled = false; btn.textContent = 'Yes, Publish Now'; }
   }
+};
+
+// ==================== PUBLISH SUCCESS SCREEN ====================
+function showPublishSuccess(igPostId, headline) {
+  setStatusPill('done', '✓ Published!');
+  const overlay = document.getElementById('successOverlay');
+  if (!overlay) return;
+  setEl('successHeadline', headline || 'Your post is live!');
+  setEl('successPostId', igPostId ? `Instagram ID: ${igPostId}` : '');
+  // Show link button only if we have a real post ID
+  const linkBtn = document.getElementById('successLinkBtn');
+  if (linkBtn) {
+    if (igPostId && !igPostId.startsWith('PREVIEW')) {
+      linkBtn.style.display = '';
+      linkBtn.href = `https://www.instagram.com/p/${igPostId}/`;
+    } else {
+      linkBtn.style.display = 'none';
+    }
+  }
+  overlay.classList.remove('hidden');
+  // Update publish btn
+  const pubBtn = document.getElementById('publishBtn');
+  if (pubBtn) { pubBtn.innerHTML = '<span>✅</span><span>Published!</span>'; pubBtn.disabled = true; pubBtn.className = 'action-btn secondary'; }
+  const badge = document.getElementById('reviewPostBadge');
+  if (badge) { badge.textContent = 'Published'; badge.className = 'review-badge published'; }
+}
+
+window.closeSuccessOverlay = function() {
+  document.getElementById('successOverlay')?.classList.add('hidden');
+  showScreen('home');
+  loadLatestPost();
 };
 
 // ==================== COPY ====================
@@ -602,16 +686,17 @@ async function loadHistory() {
 function renderHistory(posts) {
   const list = document.getElementById('historyList');
   if (!list) return;
+  S.historyPosts = posts; // store indexed, avoid JSON-in-onclick
   if (!posts?.length) {
     list.innerHTML = `<div class="empty-state-full"><div class="empty-icon">📜</div><div>No posts yet</div></div>`;
     return;
   }
-  list.innerHTML = posts.slice(0, 20).map(post => {
+  list.innerHTML = posts.slice(0, 20).map((post, idx) => {
     const isPublished = post.instagram_post_id && !post.instagram_post_id.startsWith('PREVIEW');
-    const date = post.published_at || post.generated_at || '';
+    const date = post.published_at || post.generated_at || post.generated_date || '';
     const dateStr = date ? new Date(date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '—';
     return `
-      <div class="history-item" onclick="selectHistoryPost(${JSON.stringify(JSON.stringify(post)).slice(1,-1)})">
+      <div class="history-item" onclick="selectHistoryPost(${idx})">
         <span class="history-emoji">${post.emoji || '🤖'}</span>
         <div class="history-info">
           <div class="history-headline">${esc(post.headline || 'AI Update')}</div>
@@ -624,12 +709,11 @@ function renderHistory(posts) {
   }).join('');
 }
 
-window.selectHistoryPost = function(postJson) {
-  try {
-    const post = JSON.parse(postJson);
-    populateReviewScreen(post);
-    showScreen('review');
-  } catch (_) {}
+window.selectHistoryPost = function(idx) {
+  const post = S.historyPosts[idx];
+  if (!post) return;
+  populateReviewScreen(post);
+  showScreen('review');
 };
 
 // ==================== STATUS PILL ====================
@@ -655,7 +739,7 @@ async function api(path, method = 'GET', body = null) {
 
 function setEl(id, text) {
   const el = document.getElementById(id);
-  if (el) el.textContent = text;
+  if (el) el.textContent = String(text);
 }
 
 function esc(str) {

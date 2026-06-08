@@ -100,20 +100,28 @@ app.get('/api/status', (req, res) => {
   });
 });
 
-// Get all posts
+// Get all posts — returns flat list of individual post objects
 app.get('/api/posts', (req, res) => {
   try {
     const files = fs.readdirSync(POSTS_DIR)
-      .filter(f => f.endsWith('.json') && !f.startsWith('run_'))
+      .filter(f => f.endsWith('.json') && !f.startsWith('run_') && !f.startsWith('quality_'))
       .sort().reverse()
       .slice(0, 30);
-    
-    const posts = files.map(file => {
+
+    // Each file has shape { content: { posts: [...] } } — flatten to individual posts
+    const posts = [];
+    for (const file of files) {
       try {
-        return JSON.parse(fs.readFileSync(path.join(POSTS_DIR, file), 'utf-8'));
-      } catch { return null; }
-    }).filter(Boolean);
-    
+        const data = JSON.parse(fs.readFileSync(path.join(POSTS_DIR, file), 'utf-8'));
+        const filePosts = data.content?.posts || [];
+        // Attach the file date to each post for display
+        const fileDate = file.replace('.json', '');
+        filePosts.forEach(p => {
+          posts.push({ ...p, generated_date: fileDate });
+        });
+      } catch { /* skip unreadable files */ }
+    }
+
     res.json({ posts, total: posts.length });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -676,23 +684,33 @@ server.listen(PORT, async () => {
   console.log(`🔑 Gemini API: ${process.env.GEMINI_API_KEY ? '🟢 Connected' : '🔴 Missing'}`);
   console.log('='.repeat(60));
 
-  // Start ngrok tunnel to expose local images to Instagram API
+  // Set up public image URL for Instagram API
+  // On Render.com (production): use RENDER_EXTERNAL_URL or PUBLIC_BASE_URL env var
+  // On local dev: use ngrok tunnel
   if (publisher.isConfigured) {
-    try {
-      console.log('\n🔗 Starting ngrok tunnel for Instagram image hosting...');
-      const ngrok = require('@ngrok/ngrok');
-      const listener = await ngrok.forward({
-        addr: PORT,
-        authtoken: process.env.NGROK_AUTHTOKEN,
-      });
-      const publicUrl = listener.url();
-      setPublicBaseUrl(publicUrl);
-      console.log(`✅ ngrok tunnel active: ${publicUrl}`);
-      console.log(`📸 Instagram can now fetch images from: ${publicUrl}/images/`);
-    } catch (err) {
-      console.warn(`⚠️  ngrok tunnel failed: ${err.message}`);
-      console.warn('   Images will need a public URL to publish to Instagram.');
-      console.warn('   Install ngrok manually: https://ngrok.com/download');
+    const envPublicUrl = process.env.PUBLIC_BASE_URL || process.env.RENDER_EXTERNAL_URL;
+    if (envPublicUrl) {
+      // Production / cloud deployment — use the hosted URL directly
+      setPublicBaseUrl(envPublicUrl);
+      console.log(`✅ Public URL set from environment: ${envPublicUrl}`);
+      console.log(`📸 Instagram can fetch images from: ${envPublicUrl}/images/`);
+    } else {
+      // Local dev — try ngrok
+      try {
+        console.log('\n🔗 Starting ngrok tunnel for local image hosting...');
+        const ngrok = require('@ngrok/ngrok');
+        const listener = await ngrok.forward({
+          addr: PORT,
+          authtoken: process.env.NGROK_AUTHTOKEN,
+        });
+        const publicUrl = listener.url();
+        setPublicBaseUrl(publicUrl);
+        console.log(`✅ ngrok tunnel active: ${publicUrl}`);
+        console.log(`📸 Instagram can fetch images from: ${publicUrl}/images/`);
+      } catch (err) {
+        console.warn(`⚠️  ngrok tunnel failed: ${err.message}`);
+        console.warn('   Set PUBLIC_BASE_URL env var to your server\'s public URL.');
+      }
     }
   }
 
