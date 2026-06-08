@@ -5,7 +5,8 @@
  */
 
 require('dotenv').config({ path: require('path').join(__dirname, '../../.env') });
-const { createCanvas, registerFont } = require('canvas');
+const { createCanvas, GlobalFonts } = require('@napi-rs/canvas');
+
 const fs = require('fs');
 const path = require('path');
 
