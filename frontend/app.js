@@ -161,6 +161,34 @@ function handleWS(data) {
       document.getElementById('generateBtn')?.removeAttribute('disabled');
       break;
     }
+    case 'quality_failed': {
+      S.isGenerating = false;
+      stopPollFallback();
+      setStatusPill('error', 'Quality Failed');
+      addGenLog('❌ Quality check failed — AI content had issues', 'error');
+      addGenLog('💡 Tap "Try Again" to generate new content', 'info');
+      // Show a friendly retry button in the log area
+      const logEl = document.getElementById('genLogStream');
+      if (logEl) {
+        const retryDiv = document.createElement('div');
+        retryDiv.className = 'log-line warning';
+        retryDiv.innerHTML = '<strong>Content quality check failed.</strong><br>The AI generated incomplete slides. This sometimes happens — tap below to try again.';
+        logEl.insertBefore(retryDiv, logEl.firstChild);
+      }
+      setEl('genTitle', 'Quality Check Failed');
+      setEl('genSub', 'Content had issues — please regenerate');
+      setEl('genMainIcon', '⚠️');
+      document.getElementById('generateBtn')?.removeAttribute('disabled');
+      showToast('⚠️ Quality check failed — try generating again', 'error');
+      break;
+    }
+    case 'health_check': {
+      // Keep-alive ping — if we were stuck as generating but pipeline is idle, reset
+      if (S.isGenerating && data.status === 'ok') {
+        // Will be resolved by poll fallback
+      }
+      break;
+    }
   }
 }
 

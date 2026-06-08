@@ -3,7 +3,8 @@
  * Handles caching for offline support and fast loads
  */
 
-const CACHE_NAME = 'content-studio-v1';
+const CACHE_NAME = 'content-studio-v3'; // Bump this on every deploy to bust stale cache
+
 const STATIC_ASSETS = [
   '/',
   '/index.html',

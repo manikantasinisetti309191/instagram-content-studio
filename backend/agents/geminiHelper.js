@@ -10,10 +10,11 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // Model fallback chain — tries each in order if previous is unavailable
+// Updated 2026-06: gemini-1.5-flash and gemini-1.5-flash-8b are deprecated (return 404)
 const MODEL_CHAIN = [
   'gemini-2.5-flash',
-  'gemini-1.5-flash',
-  'gemini-1.5-flash-8b'
+  'gemini-2.0-flash',
+  'gemini-2.0-flash-lite'
 ];
 
 const GENERATION_CONFIGS = {
