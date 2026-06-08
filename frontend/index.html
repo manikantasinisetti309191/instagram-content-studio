@@ -380,6 +380,167 @@
     </div>
   </div>
 
+  <!-- ==================== OVERLAY: GENERATE PICKER ==================== -->
+  <div id="generatePickerOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
+    <div class="overlay-backdrop" onclick="closeGeneratePicker()"></div>
+    <div class="gen-picker-sheet slide-up" id="genPickerSheet">
+
+      <!-- Header -->
+      <div class="gen-picker-header">
+        <div class="gen-picker-title" id="pickerTitle">Create Post</div>
+        <button class="gen-picker-close" onclick="closeGeneratePicker()" aria-label="Close">✕</button>
+      </div>
+
+      <!-- Mode Toggle: News vs Evergreen -->
+      <div class="mode-toggle-wrap">
+        <button id="modeNewsBtn" class="mode-toggle-btn active" onclick="setMode('news')" aria-pressed="true">
+          <span>📰</span> News-Based
+        </button>
+        <button id="modeEvergreenBtn" class="mode-toggle-btn" onclick="setMode('evergreen')" aria-pressed="false">
+          <span>♻️</span> Evergreen
+        </button>
+      </div>
+
+      <!-- Evergreen Topic Input (hidden by default) -->
+      <div id="evergreenTopicWrap" class="evergreen-topic-wrap hidden">
+        <div class="evergreen-label">Topic (optional — leave blank for auto-pick)</div>
+        <input id="evergreenTopicInput" class="evergreen-input" type="text"
+               placeholder="e.g. 10 ChatGPT prompts for students"
+               maxlength="120" />
+        <div class="evergreen-presets" id="evergreenPresets">
+          <button class="preset-chip" onclick="setEvergreenTopic('10 ChatGPT prompts every student must save')">Prompts for students</button>
+          <button class="preset-chip" onclick="setEvergreenTopic('7 free AI tools that replaced $500/month software')">Free AI tools</button>
+          <button class="preset-chip" onclick="setEvergreenTopic('ChatGPT vs Claude vs Gemini: which one to use?')">ChatGPT vs Claude</button>
+          <button class="preset-chip" onclick="setEvergreenTopic('5 AI myths killing your career growth')">AI myths</button>
+          <button class="preset-chip" onclick="setEvergreenTopic('The AI workflow that saves 10 hours every week')">AI workflow</button>
+          <button class="preset-chip" onclick="setEvergreenTopic('How to use AI for job interview prep')">Interview prep</button>
+        </div>
+      </div>
+
+      <!-- Section: Content Pattern -->
+      <div class="picker-section-label">CONTENT PATTERN</div>
+      <div class="pattern-grid" role="radiogroup" aria-label="Content pattern">
+
+        <button class="pattern-card selected" id="patternCard-surprise" onclick="selectPattern('auto')"
+                role="radio" aria-checked="true" data-pattern="auto">
+          <div class="pattern-card-emoji">🎲</div>
+          <div class="pattern-card-name">Surprise Me</div>
+          <div class="pattern-card-desc">AI picks the best format for today's content</div>
+        </button>
+
+        <button class="pattern-card" id="patternCard-A" onclick="selectPattern('A')"
+                role="radio" aria-checked="false" data-pattern="A">
+          <div class="pattern-card-emoji">🔦</div>
+          <div class="pattern-card-name">Tool Spotlight</div>
+          <div class="pattern-card-desc">Deep dive on one AI tool with real use cases</div>
+          <div class="pattern-card-badge saves">Max Saves</div>
+        </button>
+
+        <button class="pattern-card" id="patternCard-B" onclick="selectPattern('B')"
+                role="radio" aria-checked="false" data-pattern="B">
+          <div class="pattern-card-emoji">📋</div>
+          <div class="pattern-card-name">Prompt Playbook</div>
+          <div class="pattern-card-desc">Copy-paste prompts that get real results</div>
+          <div class="pattern-card-badge saves">Max Saves</div>
+        </button>
+
+        <button class="pattern-card" id="patternCard-C" onclick="selectPattern('C')"
+                role="radio" aria-checked="false" data-pattern="C">
+          <div class="pattern-card-emoji">📖</div>
+          <div class="pattern-card-name">Tutorial</div>
+          <div class="pattern-card-desc">Step-by-step walkthrough anyone can follow</div>
+          <div class="pattern-card-badge shares">Most Shared</div>
+        </button>
+
+        <button class="pattern-card" id="patternCard-D" onclick="selectPattern('D')"
+                role="radio" aria-checked="false" data-pattern="D">
+          <div class="pattern-card-emoji">🚫✅</div>
+          <div class="pattern-card-name">Myth Busting</div>
+          <div class="pattern-card-desc">Debunk AI myths with facts and data</div>
+          <div class="pattern-card-badge comments">Max Comments</div>
+        </button>
+
+        <button class="pattern-card" id="patternCard-E" onclick="selectPattern('E')"
+                role="radio" aria-checked="false" data-pattern="E">
+          <div class="pattern-card-emoji">⚔️</div>
+          <div class="pattern-card-name">Comparison</div>
+          <div class="pattern-card-desc">Honest tool vs tool battle with a verdict</div>
+          <div class="pattern-card-badge comments">Max Comments</div>
+        </button>
+
+      </div>
+
+      <!-- Section: Visual Theme -->
+      <div class="picker-section-label">VISUAL THEME</div>
+      <div class="theme-grid" role="radiogroup" aria-label="Visual theme">
+
+        <button class="theme-swatch selected" id="themeBtn-cyber_dark" onclick="selectTheme('cyber_dark')"
+                role="radio" aria-checked="true" data-theme="cyber_dark" title="Cyber Dark"
+                style="background: linear-gradient(135deg, #050510 0%, #00d4ff 100%)">
+          <span class="theme-check">✓</span>
+          <span class="theme-name">Cyber Dark</span>
+        </button>
+
+        <button class="theme-swatch" id="themeBtn-neon_purple" onclick="selectTheme('neon_purple')"
+                role="radio" aria-checked="false" data-theme="neon_purple" title="Neon Purple"
+                style="background: linear-gradient(135deg, #08030f 0%, #bf5fff 100%)">
+          <span class="theme-check">✓</span>
+          <span class="theme-name">Neon Purple</span>
+        </button>
+
+        <button class="theme-swatch" id="themeBtn-sunset_fire" onclick="selectTheme('sunset_fire')"
+                role="radio" aria-checked="false" data-theme="sunset_fire" title="Sunset Fire"
+                style="background: linear-gradient(135deg, #0d0500 0%, #ff6b2b 100%)">
+          <span class="theme-check">✓</span>
+          <span class="theme-name">Sunset Fire</span>
+        </button>
+
+        <button class="theme-swatch" id="themeBtn-matrix_green" onclick="selectTheme('matrix_green')"
+                role="radio" aria-checked="false" data-theme="matrix_green" title="Matrix"
+                style="background: linear-gradient(135deg, #000a00 0%, #00ff41 100%)">
+          <span class="theme-check">✓</span>
+          <span class="theme-name">Matrix</span>
+        </button>
+
+        <button class="theme-swatch" id="themeBtn-rose_gold" onclick="selectTheme('rose_gold')"
+                role="radio" aria-checked="false" data-theme="rose_gold" title="Rose Gold"
+                style="background: linear-gradient(135deg, #0f0507 0%, #ff6b9d 100%)">
+          <span class="theme-check">✓</span>
+          <span class="theme-name">Rose Gold</span>
+        </button>
+
+        <button class="theme-swatch" id="themeBtn-ocean_deep" onclick="selectTheme('ocean_deep')"
+                role="radio" aria-checked="false" data-theme="ocean_deep" title="Ocean Deep"
+                style="background: linear-gradient(135deg, #000d1a 0%, #00b4d8 100%)">
+          <span class="theme-check">✓</span>
+          <span class="theme-name">Ocean Deep</span>
+        </button>
+
+        <button class="theme-swatch" id="themeBtn-midnight_red" onclick="selectTheme('midnight_red')"
+                role="radio" aria-checked="false" data-theme="midnight_red" title="Midnight Red"
+                style="background: linear-gradient(135deg, #0d0000 0%, #ff2244 100%)">
+          <span class="theme-check">✓</span>
+          <span class="theme-name">Midnight Red</span>
+        </button>
+
+        <button class="theme-swatch" id="themeBtn-golden_hour" onclick="selectTheme('golden_hour')"
+                role="radio" aria-checked="false" data-theme="golden_hour" title="Golden Hour"
+                style="background: linear-gradient(135deg, #0a0700 0%, #ffd700 100%)">
+          <span class="theme-check">✓</span>
+          <span class="theme-name">Golden Hour</span>
+        </button>
+
+      </div>
+
+      <!-- Generate CTA -->
+      <button id="pickerGenerateBtn" class="picker-generate-btn" onclick="submitGenerate()">
+        <span id="pickerGenerateBtnIcon">⚡</span>
+        <span id="pickerGenerateBtnText">Generate Post</span>
+      </button>
+
+    </div>
+  </div>
+
   <script src="/app.js"></script>
 </body>
 </html>

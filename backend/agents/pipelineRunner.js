@@ -68,8 +68,11 @@ function updateStep(stepName, status, data = {}) {
 }
 
 async function runPipeline(options = {}) {
-  const { publishNow = false, skipPublish = false, broadcast = null, onImagesReady = null } = options;
+  const { publishNow = false, skipPublish = false, broadcast = null, onImagesReady = null,
+          pattern = 'auto', theme = 'cyber_dark', mode = 'news', topic = null } = options;
   const isPreview = skipPublish || !publisher.isConfigured;
+  const isEvergreen = mode === 'evergreen';
+
   
   console.log('\n' + '='.repeat(60));
   console.log('🤖 AI INSTAGRAM AUTOMATION PIPELINE STARTING');
@@ -95,57 +98,83 @@ async function runPipeline(options = {}) {
   };
 
   try {
-    // ================================
-    // STEP 1: AI NEWS RESEARCH (8:00 AM)
-    // ================================
-    log('🔍 STEP 1: Starting AI news research...', 'info');
-    pipelineState.currentStep = 'research';
-    updateStep('research', 'running');
-    
-    const newsData = await researchAINews();
-    pipelineResult.research = newsData;
-    
-    updateStep('research', 'complete', { items_found: newsData.total_items, is_fallback: newsData.is_fallback });
-    const researchMsg = newsData.is_fallback
-      ? `⚠️ Live news unavailable — using curated library (${newsData.total_items} topics)`
-      : `✅ Research complete — found ${newsData.total_items} live AI news items`;
-    log(researchMsg, newsData.is_fallback ? 'warning' : 'success');
-    if (broadcast) broadcast({
-      type: newsData.is_fallback ? 'api_warning' : 'step_complete',
-      step: 'research',
-      level: newsData.is_fallback ? 'warning' : 'info',
-      message: researchMsg,
-      data: { items_found: newsData.total_items, is_fallback: newsData.is_fallback }
-    });
+    let newsData, filteredNews;
 
-    // ================================
-    // STEP 2: FILTER — PICK BEST 1 POST
-    // ================================
-    log('🎯 STEP 2: Selecting today\'s best AI story...', 'info');
-    pipelineState.currentStep = 'filter';
-    updateStep('filter', 'running');
-    
-    const filteredNews = await filterTopNews(newsData, { broadcast });
-    
-    // ✅ ENFORCE: Only 1 post per day — take the top-ranked item
-    filteredNews.selected_items = filteredNews.selected_items.slice(0, 1);
+    if (isEvergreen) {
+      // ================================
+      // EVERGREEN MODE: Skip research+filter, use evergreenAgent
+      // ================================
+      log('♻️ EVERGREEN MODE: Generating timeless content...', 'info');
+      pipelineState.currentStep = 'research';
+      updateStep('research', 'running');
+      let evergreenAgent;
+      try { evergreenAgent = require('./evergreenAgent'); } catch(e) {
+        log('⚠️ evergreenAgent not found — falling back to news mode', 'warning');
+      }
+      if (evergreenAgent) {
+        const evData = await evergreenAgent.generateEvergreenContent({ topic });
+        newsData = evData;
+        filteredNews = { selected_items: evData.selected_items, is_evergreen: true };
+      } else {
+        newsData = await researchAINews();
+        filteredNews = await filterTopNews(newsData, { broadcast });
+        filteredNews.selected_items = filteredNews.selected_items.slice(0, 1);
+      }
+      updateStep('research', 'complete', { mode: 'evergreen', topic: topic || 'auto' });
+      log(`✅ Evergreen topic: ${filteredNews.selected_items[0]?.headline || 'Selected'}`, 'success');
+      updateStep('filter', 'complete', { items_selected: 1 });
+      if (broadcast) broadcast({ type: 'step_complete', step: 'filter', data: filteredNews });
+    } else {
+      // ================================
+      // STEP 1: AI NEWS RESEARCH
+      // ================================
+      log('🔍 STEP 1: Starting AI news research...', 'info');
+      pipelineState.currentStep = 'research';
+      updateStep('research', 'running');
+      newsData = await researchAINews();
+      pipelineResult.research = newsData;
+      updateStep('research', 'complete', { items_found: newsData.total_items, is_fallback: newsData.is_fallback });
+      const researchMsg = newsData.is_fallback
+        ? `⚠️ Live news unavailable — using curated library (${newsData.total_items} topics)`
+        : `✅ Research complete — found ${newsData.total_items} live AI news items`;
+      log(researchMsg, newsData.is_fallback ? 'warning' : 'success');
+      if (broadcast) broadcast({
+        type: newsData.is_fallback ? 'api_warning' : 'step_complete',
+        step: 'research', level: newsData.is_fallback ? 'warning' : 'info',
+        message: researchMsg,
+        data: { items_found: newsData.total_items, is_fallback: newsData.is_fallback }
+      });
+
+      // ================================
+      // STEP 2: FILTER — PICK BEST 1 POST
+      // ================================
+      log('🎯 STEP 2: Selecting today\'s best AI story...', 'info');
+      pipelineState.currentStep = 'filter';
+      updateStep('filter', 'running');
+      filteredNews = await filterTopNews(newsData, { broadcast });
+      filteredNews.selected_items = filteredNews.selected_items.slice(0, 1);
+      pipelineResult.filter = filteredNews;
+      const topStory = filteredNews.selected_items[0];
+      updateStep('filter', 'complete', { items_selected: 1, top_story: topStory?.headline });
+      log(`✅ Today's story selected: ${topStory?.headline}`, 'success');
+      log(`   Score: ${topStory?.final_score?.toFixed(1) || 'N/A'} | Category: ${topStory?.category || 'AI News'}`, 'info');
+      if (broadcast) broadcast({ type: 'step_complete', step: 'filter', data: filteredNews });
+    }
+
+    pipelineResult.research = newsData;
     pipelineResult.filter = filteredNews;
-    
-    const topStory = filteredNews.selected_items[0];
-    updateStep('filter', 'complete', { items_selected: 1, top_story: topStory?.headline });
-    log(`✅ Today's story selected: ${topStory?.headline}`, 'success');
-    log(`   Score: ${topStory?.final_score?.toFixed(1) || 'N/A'} | Category: ${topStory?.category || 'AI News'}`, 'info');
-    if (broadcast) broadcast({ type: 'step_complete', step: 'filter', data: filteredNews });
+
 
     // ================================
     // STEP 3: CONTENT GENERATION
     // ================================
-    log('📝 STEP 3: Generating 10-slide carousel content...', 'info');
+    log(`📝 STEP 3: Generating 10-slide carousel content (Pattern: ${pattern}, Theme: ${theme})...`, 'info');
     pipelineState.currentStep = 'content';
     updateStep('content', 'running');
     
-    const contentData = await generateAllContent(filteredNews);
+    const contentData = await generateAllContent(filteredNews, { pattern, theme });
     pipelineResult.content = contentData;
+
     
     // Save content data
     const contentFile = path.join(POSTS_DIR, `${new Date().toISOString().split('T')[0]}.json`);
@@ -257,7 +286,7 @@ async function runPipeline(options = {}) {
     pipelineState.currentStep = 'render';
     updateStep('render', 'running');
     
-    const carouselResults = await renderAllCarousels(contentData);
+    const carouselResults = await renderAllCarousels(contentData, { theme });
     pipelineResult.carousels = carouselResults;
     
     const totalImages = carouselResults.reduce((sum, r) => sum + r.image_paths.length, 0);

@@ -485,19 +485,30 @@ window.openFullScreen = function(imgSrc) {
   overlay.innerHTML = `<img src="${imgSrc}" style="max-width:100%;max-height:100%;object-fit:contain;" />`;
 };
 
-// ==================== GENERATE ====================
-window.startGenerate = async function() {
+// ==================== GENERATE (opens picker) ====================
+window.startGenerate = function() {
   if (S.isGenerating) { showToast('Already generating...', 'error'); return; }
+  openGeneratePicker();
+};
+
+// Executes the actual pipeline after picker submit
+async function _runGenerate(pattern, theme, mode, topic) {
+  if (S.isGenerating) return;
+  const btn = document.getElementById('generateBtn');
+  if (btn) btn.disabled = true;
+  S.isGenerating = true;
+  showScreen('generating');
+  resetGenUI();
+  setStatusPill('running', 'Generating...');
+  startPollFallback();
+
+  const endpoint = mode === 'evergreen' ? '/api/generate/evergreen' : '/api/generate';
+  const body = { pattern: pattern || 'auto', theme: theme || 'cyber_dark' };
+  if (mode === 'evergreen' && topic) body.topic = topic;
+
   try {
-    const btn = document.getElementById('generateBtn');
-    if (btn) btn.disabled = true;
-    S.isGenerating = true;
-    showScreen('generating');
-    resetGenUI();
-    setStatusPill('running', 'Generating...');
-    startPollFallback();
-    await api('/api/generate', 'POST');
-    addGenLog('✅ Pipeline started — takes 3-5 minutes', 'success');
+    await api(endpoint, 'POST', body);
+    addGenLog(`✅ Pipeline started — Pattern: ${pattern || 'AI Pick'} | Theme: ${theme} | Mode: ${mode}`, 'success');
   } catch (err) {
     S.isGenerating = false;
     stopPollFallback();
@@ -506,7 +517,7 @@ window.startGenerate = async function() {
     showToast('❌ Failed to start: ' + (err.message || 'Check server'), 'error');
     document.getElementById('generateBtn')?.removeAttribute('disabled');
   }
-};
+}
 
 function resetGenUI() {
   setEl('genTitle', 'Researching AI News');
@@ -822,3 +833,142 @@ function showGenBanner(msg, type) {
   if (genLog) screen.insertBefore(banner, genLog); else screen.prepend(banner);
   setTimeout(function() { banner && banner.remove(); }, 10000);
 }
+
+// ==================== GENERATE PICKER MODAL ====================
+const pickerState = {
+  pattern: 'auto',
+  theme: 'cyber_dark',
+  mode: 'news',
+  topic: ''
+};
+
+window.openGeneratePicker = function() {
+  const overlay = document.getElementById('generatePickerOverlay');
+  if (!overlay) return;
+  // Reset to defaults
+  pickerState.pattern = 'auto';
+  pickerState.theme = 'cyber_dark';
+  pickerState.mode = 'news';
+  pickerState.topic = '';
+  _syncPickerUI();
+  overlay.classList.remove('hidden');
+  // Animate sheet in
+  const sheet = document.getElementById('genPickerSheet');
+  if (sheet) {
+    sheet.style.transform = 'translateY(100%)';
+    requestAnimationFrame(() => {
+      sheet.style.transition = 'transform 0.35s cubic-bezier(0.32,0.72,0,1)';
+      sheet.style.transform = 'translateY(0)';
+    });
+  }
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeGeneratePicker = function() {
+  const sheet = document.getElementById('genPickerSheet');
+  if (sheet) {
+    sheet.style.transform = 'translateY(100%)';
+    setTimeout(() => {
+      const overlay = document.getElementById('generatePickerOverlay');
+      if (overlay) overlay.classList.add('hidden');
+      document.body.style.overflow = '';
+    }, 320);
+  } else {
+    document.getElementById('generatePickerOverlay')?.classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+};
+
+window.setMode = function(mode) {
+  pickerState.mode = mode;
+  const newsBtn = document.getElementById('modeNewsBtn');
+  const evBtn = document.getElementById('modeEvergreenBtn');
+  const evWrap = document.getElementById('evergreenTopicWrap');
+  if (newsBtn) { newsBtn.classList.toggle('active', mode === 'news'); newsBtn.setAttribute('aria-pressed', mode === 'news'); }
+  if (evBtn)   { evBtn.classList.toggle('active', mode === 'evergreen'); evBtn.setAttribute('aria-pressed', mode === 'evergreen'); }
+  if (evWrap)  { evWrap.classList.toggle('hidden', mode !== 'evergreen'); }
+};
+
+window.selectPattern = function(pattern) {
+  pickerState.pattern = pattern;
+  // Deselect all, select chosen
+  document.querySelectorAll('.pattern-card').forEach(card => {
+    const isSelected = card.dataset.pattern === pattern;
+    card.classList.toggle('selected', isSelected);
+    card.setAttribute('aria-checked', isSelected);
+  });
+};
+
+window.selectTheme = function(themeKey) {
+  pickerState.theme = themeKey;
+  document.querySelectorAll('.theme-swatch').forEach(btn => {
+    const isSelected = btn.dataset.theme === themeKey;
+    btn.classList.toggle('selected', isSelected);
+    btn.setAttribute('aria-checked', isSelected);
+  });
+};
+
+window.setEvergreenTopic = function(topic) {
+  pickerState.topic = topic;
+  const input = document.getElementById('evergreenTopicInput');
+  if (input) input.value = topic;
+};
+
+window.submitGenerate = async function() {
+  // Collect state
+  pickerState.topic = (document.getElementById('evergreenTopicInput')?.value || '').trim();
+
+  // Validate evergreen mode has at minimum auto-selection available
+  // (no topic = auto-pick from 30+ evergreen topics, which is valid)
+
+  // Disable button to prevent double-submit
+  const btn = document.getElementById('pickerGenerateBtn');
+  if (btn) { btn.disabled = true; btn.querySelector('#pickerGenerateBtnText').textContent = 'Starting...'; }
+
+  closeGeneratePicker();
+
+  // Small delay for animation
+  await new Promise(r => setTimeout(r, 150));
+
+  await _runGenerate(
+    pickerState.pattern,
+    pickerState.theme,
+    pickerState.mode,
+    pickerState.topic
+  );
+};
+
+function _syncPickerUI() {
+  // Sync pattern
+  document.querySelectorAll('.pattern-card').forEach(card => {
+    const isSelected = card.dataset.pattern === pickerState.pattern;
+    card.classList.toggle('selected', isSelected);
+    card.setAttribute('aria-checked', isSelected);
+  });
+  // Sync theme
+  document.querySelectorAll('.theme-swatch').forEach(btn => {
+    const isSelected = btn.dataset.theme === pickerState.theme;
+    btn.classList.toggle('selected', isSelected);
+    btn.setAttribute('aria-checked', isSelected);
+  });
+  // Sync mode
+  setMode(pickerState.mode);
+  // Reset picker button
+  const btn = document.getElementById('pickerGenerateBtn');
+  if (btn) {
+    btn.disabled = false;
+    const t = document.getElementById('pickerGenerateBtnText');
+    if (t) t.textContent = 'Generate Post';
+  }
+  // Reset evergreen input
+  const input = document.getElementById('evergreenTopicInput');
+  if (input) input.value = '';
+}
+
+// Close picker on back-swipe/Android back
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    const overlay = document.getElementById('generatePickerOverlay');
+    if (overlay && !overlay.classList.contains('hidden')) closeGeneratePicker();
+  }
+});

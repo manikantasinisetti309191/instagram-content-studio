@@ -446,20 +446,67 @@ app.post('/api/generate', async (req, res) => {
     });
   }
 
+  // Extract picker options from request body
+  const { pattern, theme, mode, topic } = req.body || {};
+  const validPatterns = ['A', 'B', 'C', 'D', 'E', 'auto'];
+  const validThemes = ['cyber_dark','neon_purple','sunset_fire','matrix_green','rose_gold','ocean_deep','midnight_red','golden_hour'];
+  const safePattern = validPatterns.includes(pattern) ? pattern : 'auto';
+  const safeTheme   = validThemes.includes(theme) ? theme : 'cyber_dark';
+
   res.json({
-    message: 'Pipeline started! Generating and rendering slides. Check /api/status for progress.',
-    started_at: new Date().toISOString()
+    message: `Pipeline started! Pattern: ${safePattern} | Theme: ${safeTheme}. Check /api/status for progress.`,
+    started_at: new Date().toISOString(),
+    options: { pattern: safePattern, theme: safeTheme }
   });
 
   // Run in background — generate + render only, no publish
   runPipeline({
     publishNow: false,
     skipPublish: true,
+    pattern: safePattern,
+    theme: safeTheme,
     broadcast,
     onImagesReady: (postId, base64s) => imageStore.set(postId, base64s)
   }).catch(err => console.error('Background pipeline error (/api/generate):', err));
-
 });
+
+// POST /api/generate/evergreen - generate timeless content without live news
+app.post('/api/generate/evergreen', async (req, res) => {
+  const state = getPipelineState();
+
+  if (state.status === 'running') {
+    return res.status(409).json({
+      error: 'Pipeline already running',
+      current_step: state.currentStep
+    });
+  }
+
+  const { pattern, theme, topic } = req.body || {};
+  const validPatterns = ['A', 'B', 'C', 'D', 'E', 'auto'];
+  const validThemes = ['cyber_dark','neon_purple','sunset_fire','matrix_green','rose_gold','ocean_deep','midnight_red','golden_hour'];
+  const safePattern = validPatterns.includes(pattern) ? pattern : 'auto';
+  const safeTheme   = validThemes.includes(theme) ? theme : 'cyber_dark';
+  const safeTopic   = typeof topic === 'string' && topic.trim().length > 0 ? topic.trim() : null;
+
+  res.json({
+    message: `Evergreen pipeline started! Topic: ${safeTopic || 'auto-selected'}. Check /api/status for progress.`,
+    started_at: new Date().toISOString(),
+    options: { pattern: safePattern, theme: safeTheme, topic: safeTopic, mode: 'evergreen' }
+  });
+
+  runPipeline({
+    publishNow: false,
+    skipPublish: true,
+    mode: 'evergreen',
+    topic: safeTopic,
+    pattern: safePattern,
+    theme: safeTheme,
+    broadcast,
+    onImagesReady: (postId, base64s) => imageStore.set(postId, base64s)
+  }).catch(err => console.error('Background pipeline error (/api/generate/evergreen):', err));
+});
+
+
 
 // POST /api/regenerate - regenerate with a completely fresh topic (skip current)
 app.post('/api/regenerate', async (req, res) => {
