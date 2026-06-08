@@ -298,22 +298,31 @@ function drawSlide1(ctx, slideData, postData) {
   ctx.textAlign = 'left';
   ctx.fillText(postData.emoji || '🤖', 60, 250);
   
-  // Main title - large and bold
-  ctx.font = '900 82px Arial';
+  // Main title — dynamic font size so long titles never get clipped
+  const rawTitle = stripEmoji(slideData.title || postData.headline);
+  // Pick font size: shrink for longer titles so every word wraps cleanly
+  let titleFontSize = 82;
+  if (rawTitle.length > 25) titleFontSize = 72;
+  if (rawTitle.length > 35) titleFontSize = 62;
+  if (rawTitle.length > 50) titleFontSize = 52;
+  const titleLineHeight = Math.round(titleFontSize * 1.18);
+
+  // MUST set font BEFORE calling wrapText so ctx.measureText is accurate
+  ctx.font = `900 ${titleFontSize}px Arial`;
   ctx.fillStyle = COLORS.text_primary;
   ctx.textAlign = 'left';
-  
-  const titleLines = wrapText(ctx, stripEmoji(slideData.title || postData.headline), WIDTH - 120);
-  let titleY = 360;
-  titleLines.slice(0, 3).forEach(line => {
-    // Gradient text effect via shadow
+
+  // Use WIDTH-140 (extra 20px safety margin) so no character ever touches the edge
+  const titleLines = wrapText(ctx, rawTitle, WIDTH - 140);
+  let titleY = titleFontSize > 70 ? 360 : 340;
+  titleLines.slice(0, 4).forEach(line => {
     ctx.save();
     ctx.shadowColor = theme.accent;
     ctx.shadowBlur = 30;
     ctx.fillStyle = COLORS.text_primary;
     ctx.fillText(line, 60, titleY);
     ctx.restore();
-    titleY += 95;
+    titleY += titleLineHeight;
   });
   
   // Subtitle
