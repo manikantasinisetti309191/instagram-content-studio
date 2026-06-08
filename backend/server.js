@@ -33,6 +33,12 @@ const LOGS_DIR = path.join(DATA_DIR, 'logs');
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 });
 
+// ─── IN-MEMORY IMAGE STORE ────────────────────────────────────────────────────
+// Maps post_id → array of base64 data URIs for each slide.
+// Survives disk wipes (Render free tier ephemeral filesystem).
+const imageStore = new Map();
+
+
 // ================================
 // MIDDLEWARE
 // ================================
@@ -174,26 +180,29 @@ app.get('/api/posts/:postId', (req, res) => {
   }
 });
 
-// Get carousel images for a post
+// Get carousel images for a post — checks in-memory store first, then disk
 app.get('/api/posts/:postId/images', (req, res) => {
   const { postId } = req.params;
-  const imageDir = path.join(IMAGES_DIR, postId);
-  
-  if (!fs.existsSync(imageDir)) {
-    return res.json({ images: [] });
+
+  // 1. In-memory store (fastest, always fresh, survives restarts in same process)
+  if (imageStore.has(postId)) {
+    return res.json({ images: imageStore.get(postId), post_id: postId });
   }
-  
-  const images = fs.readdirSync(imageDir)
-    .filter(f => f.endsWith('.png'))
-    .sort((a, b) => {
-      const numA = parseInt(a.match(/\d+/) || [0]);
-      const numB = parseInt(b.match(/\d+/) || [0]);
-      return numA - numB;
-    })
-    .map(img => `/images/${postId}/${img}`);
-  
-  res.json({ images, post_id: postId });
+
+  // 2. Disk fallback (works if files haven't been wiped yet)
+  const imageDir = path.join(IMAGES_DIR, postId);
+  if (fs.existsSync(imageDir)) {
+    const images = fs.readdirSync(imageDir)
+      .filter(f => f.endsWith('.png'))
+      .sort((a, b) => parseInt(a.match(/\d+/)) - parseInt(b.match(/\d+/)))
+      .map(img => `/images/${postId}/${img}`);
+    if (images.length > 0) return res.json({ images, post_id: postId });
+  }
+
+  // 3. Nothing found
+  res.json({ images: [], post_id: postId });
 });
+
 
 // Trigger pipeline manually
 app.post('/api/run-now', async (req, res) => {
@@ -413,8 +422,13 @@ app.post('/api/generate', async (req, res) => {
   });
 
   // Run in background — generate + render only, no publish
-  runPipeline({ publishNow: false, skipPublish: true, broadcast })
-    .catch(err => console.error('Background pipeline error (/api/generate):', err));
+  runPipeline({
+    publishNow: false,
+    skipPublish: true,
+    broadcast,
+    onImagesReady: (postId, base64s) => imageStore.set(postId, base64s)
+  }).catch(err => console.error('Background pipeline error (/api/generate):', err));
+
 });
 
 // POST /api/regenerate - regenerate with a completely fresh topic (skip current)
@@ -472,11 +486,19 @@ app.post('/api/regenerate', async (req, res) => {
       const carouselResults = await renderAllCarousels(contentData);
       const totalImages = carouselResults.reduce((sum, r) => sum + r.image_paths.length, 0);
 
+      // Store base64 images in memory — survives disk wipes
+      carouselResults.forEach(r => {
+        if (r.image_base64s && r.image_base64s.length > 0) {
+          imageStore.set(r.post_id, r.image_base64s);
+        }
+      });
+
       broadcast({
         type: 'regenerate_complete',
         message: `✅ New post ready: "${contentData.posts[0]?.headline}" (${totalImages} slides rendered)`,
         headline: contentData.posts[0]?.headline
       });
+
     } catch (err) {
       console.error('Background regenerate error:', err);
       broadcast({ type: 'regenerate_error', message: `❌ Regeneration failed: ${err.message}` });
@@ -544,11 +566,19 @@ app.post('/api/edit-content', async (req, res) => {
       const carouselResults = await renderAllCarousels(updatedData.content);
       const totalImages = carouselResults.reduce((sum, r) => sum + r.image_paths.length, 0);
 
+      // Store base64 images in memory
+      carouselResults.forEach(r => {
+        if (r.image_base64s && r.image_base64s.length > 0) {
+          imageStore.set(r.post_id, r.image_base64s);
+        }
+      });
+
       broadcast({
         type: 'edit_complete',
         message: `✅ Content updated and ${totalImages} slides re-rendered. Review in dashboard.`,
         instruction: instruction.trim()
       });
+
     } catch (err) {
       console.error('Background edit-content error:', err);
       broadcast({ type: 'edit_error', message: `❌ Edit failed: ${err.message}` });

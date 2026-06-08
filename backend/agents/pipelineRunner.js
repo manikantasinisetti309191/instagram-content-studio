@@ -256,6 +256,16 @@ async function runPipeline(options = {}) {
     log(`✅ Carousel rendering complete — ${totalImages} images created`, 'success');
     if (broadcast) broadcast({ type: 'step_complete', step: 'render', data: { total_images: totalImages } });
 
+    // Notify server to cache base64 images in memory (survives disk wipes on Render)
+    if (typeof onImagesReady === 'function') {
+      carouselResults.forEach(r => {
+        if (r.image_base64s && r.image_base64s.length > 0) {
+          onImagesReady(r.post_id, r.image_base64s);
+        }
+      });
+    }
+
+
     // ================================
     // STEP 5: INSTAGRAM PUBLISHING (9:00 AM)
     // ================================

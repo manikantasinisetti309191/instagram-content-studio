@@ -887,8 +887,8 @@ async function renderCarousel(post) {
   }
   
   const imagePaths = [];
+  const imageBase64s = []; // ← also store base64 so images survive disk wipes
   
-  // Dynamically detect how many slides are in this post (supports 5 or 10)
   const totalSlides = Object.keys(post.slides || {}).length;
   
   for (let slideNum = 1; slideNum <= totalSlides; slideNum++) {
@@ -907,7 +907,6 @@ async function renderCarousel(post) {
     if (drawer) {
       drawer(ctx, slideData, post);
     } else {
-      // Generic fallback for unknown slides
       drawBackground(ctx, (slideNum % 5) || 5);
       const theme = SLIDE_THEMES[(slideNum % 10) || 10];
       ctx.textAlign = 'center';
@@ -920,15 +919,21 @@ async function renderCarousel(post) {
     const filename = `slide_${slideNum}.png`;
     const filepath = path.join(postDir, filename);
     const buffer = canvas.toBuffer('image/png');
-    fs.writeFileSync(filepath, buffer);
     
+    // Save to disk (may be lost on Render restart)
+    fs.writeFileSync(filepath, buffer);
     imagePaths.push(filepath);
+    
+    // ALSO store as base64 data URI — survives in memory even after disk wipe
+    imageBase64s.push(`data:image/png;base64,${buffer.toString('base64')}`);
+    
     console.log(`  ✅ Slide ${slideNum}/${totalSlides} rendered: ${filename}`);
   }
   
   console.log(`  🎉 Carousel complete! ${imagePaths.length} slides rendered`);
-  return imagePaths;
+  return { imagePaths, imageBase64s };
 }
+
 
 async function renderAllCarousels(contentData) {
   console.log('🎨 Starting carousel rendering for all posts...');
@@ -936,12 +941,13 @@ async function renderAllCarousels(contentData) {
   const results = [];
   
   for (const post of contentData.posts) {
-    const imagePaths = await renderCarousel(post);
+    const { imagePaths, imageBase64s } = await renderCarousel(post);
     results.push({
       post_id: post.post_id,
       rank: post.rank,
       headline: post.headline,
       image_paths: imagePaths,
+      image_base64s: imageBase64s, // ← persist in memory, survives disk wipes
       rendered_at: new Date().toISOString()
     });
   }
@@ -951,6 +957,7 @@ async function renderAllCarousels(contentData) {
 }
 
 // Test mode
+
 if (process.argv.includes('--test')) {
   const testPost = {
     post_id: 'test_post_001',
