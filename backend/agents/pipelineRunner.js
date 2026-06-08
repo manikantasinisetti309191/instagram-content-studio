@@ -68,7 +68,7 @@ function updateStep(stepName, status, data = {}) {
 }
 
 async function runPipeline(options = {}) {
-  const { publishNow = false, skipPublish = false, broadcast = null } = options;
+  const { publishNow = false, skipPublish = false, broadcast = null, onImagesReady = null } = options;
   const isPreview = skipPublish || !publisher.isConfigured;
   
   console.log('\n' + '='.repeat(60));
@@ -105,9 +105,18 @@ async function runPipeline(options = {}) {
     const newsData = await researchAINews();
     pipelineResult.research = newsData;
     
-    updateStep('research', 'complete', { items_found: newsData.total_items });
-    log(`✅ Research complete — found ${newsData.total_items} AI news items`, 'success');
-    if (broadcast) broadcast({ type: 'step_complete', step: 'research', data: newsData });
+    updateStep('research', 'complete', { items_found: newsData.total_items, is_fallback: newsData.is_fallback });
+    const researchMsg = newsData.is_fallback
+      ? `⚠️ Live news unavailable — using curated library (${newsData.total_items} topics)`
+      : `✅ Research complete — found ${newsData.total_items} live AI news items`;
+    log(researchMsg, newsData.is_fallback ? 'warning' : 'success');
+    if (broadcast) broadcast({
+      type: newsData.is_fallback ? 'api_warning' : 'step_complete',
+      step: 'research',
+      level: newsData.is_fallback ? 'warning' : 'info',
+      message: researchMsg,
+      data: { items_found: newsData.total_items, is_fallback: newsData.is_fallback }
+    });
 
     // ================================
     // STEP 2: FILTER — PICK BEST 1 POST
@@ -116,7 +125,7 @@ async function runPipeline(options = {}) {
     pipelineState.currentStep = 'filter';
     updateStep('filter', 'running');
     
-    const filteredNews = await filterTopNews(newsData);
+    const filteredNews = await filterTopNews(newsData, { broadcast });
     
     // ✅ ENFORCE: Only 1 post per day — take the top-ranked item
     filteredNews.selected_items = filteredNews.selected_items.slice(0, 1);
@@ -264,7 +273,6 @@ async function runPipeline(options = {}) {
         }
       });
     }
-
 
     // ================================
     // STEP 5: INSTAGRAM PUBLISHING (9:00 AM)

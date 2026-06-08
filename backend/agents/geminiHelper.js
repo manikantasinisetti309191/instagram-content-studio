@@ -9,18 +9,18 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Model fallback chain — tries each in order if previous is unavailable
-// Updated 2026-06: gemini-1.5-flash and gemini-1.5-flash-8b are deprecated (return 404)
+// Model chain: ONLY models confirmed working June 2025
+// gemini-2.5-flash = fast, free tier, best for high-volume
+// gemini-2.5-pro   = highest quality, use as backup
 const MODEL_CHAIN = [
   'gemini-2.5-flash',
-  'gemini-2.0-flash',
-  'gemini-2.0-flash-lite'
+  'gemini-2.5-pro'
 ];
 
 const GENERATION_CONFIGS = {
-  research:  { temperature: 0.7, topK: 40, topP: 0.95, maxOutputTokens: 8192 },
-  filter:    { temperature: 0.6, topK: 40, topP: 0.95, maxOutputTokens: 4096 },
-  content:   { temperature: 0.8, topK: 40, topP: 0.95, maxOutputTokens: 8192 },
+  research:  { temperature: 0.9, topK: 40, topP: 0.95, maxOutputTokens: 8192 },
+  filter:    { temperature: 0.7, topK: 40, topP: 0.95, maxOutputTokens: 4096 },
+  content:   { temperature: 0.9, topK: 40, topP: 0.95, maxOutputTokens: 8192 },
 };
 
 /**
@@ -55,7 +55,7 @@ async function callGemini(prompt, configType = 'content') {
         if (is404) break; // Model doesn't exist, try next immediately
         if (is503 || is429) {
           if (attempt < 2) {
-            const wait = attempt * 8000; // 8s, 16s
+            const wait = attempt * 15000; // 15s, 30s — give server time to recover
             console.log(`⏳ Waiting ${wait/1000}s before retry...`);
             await new Promise(r => setTimeout(r, wait));
           }

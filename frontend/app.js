@@ -115,6 +115,19 @@ function handleWS(data) {
       addGenLog(data.message || `${data.step} ${data.type === 'step_complete' ? 'done' : 'started'}`, 'info');
       break;
     }
+    // API warning — Gemini busy or using curated fallback
+    case 'api_warning': {
+      addGenLog(data.message || '⚠️ Using curated news library', 'warning');
+      showGenBanner(data.message || '⚠️ Live AI news temporarily unavailable — using curated library', 'warning');
+      break;
+    }
+    // General status update (dedup notices, fallback, etc.)
+    case 'status_update': {
+      const upLvl = data.level || 'info';
+      addGenLog(data.message || '', upLvl);
+      if (upLvl === 'warning') showGenBanner(data.message, 'warning');
+      break;
+    }
     case 'pipeline_complete':
     case 'slides_ready_for_review': {
       finishGenerating();
@@ -156,28 +169,28 @@ function handleWS(data) {
     case 'pipeline_error': {
       S.isGenerating = false;
       stopPollFallback();
-      setStatusPill('error', 'Error');
-      addGenLog('❌ Error: ' + (data.error || 'Unknown'), 'error');
+      setStatusPill('error', 'Failed');
+      const peMsg = data.error || 'Unknown error';
+      addGenLog('❌ Generation failed: ' + peMsg, 'error');
+      addGenLog('💡 Usually temporary — tap Generate to try again', 'info');
+      setEl('genTitle', 'Generation Failed');
+      setEl('genSub', 'Tap Generate to try again');
+      setEl('genMainIcon', '❌');
+      showGenBanner('❌ Content generation failed. Please try again.', 'error');
       document.getElementById('generateBtn')?.removeAttribute('disabled');
+      showToast('❌ Generation failed — please try again', 'error');
       break;
     }
     case 'quality_failed': {
       S.isGenerating = false;
       stopPollFallback();
       setStatusPill('error', 'Quality Failed');
-      addGenLog('❌ Quality check failed — AI content had issues', 'error');
-      addGenLog('💡 Tap "Try Again" to generate new content', 'info');
-      // Show a friendly retry button in the log area
-      const logEl = document.getElementById('genLogStream');
-      if (logEl) {
-        const retryDiv = document.createElement('div');
-        retryDiv.className = 'log-line warning';
-        retryDiv.innerHTML = '<strong>Content quality check failed.</strong><br>The AI generated incomplete slides. This sometimes happens — tap below to try again.';
-        logEl.insertBefore(retryDiv, logEl.firstChild);
-      }
+      addGenLog('❌ Quality check failed — AI content had gaps', 'error');
+      addGenLog('💡 Quality failures are usually one-off — tap Generate to retry', 'info');
       setEl('genTitle', 'Quality Check Failed');
-      setEl('genSub', 'Content had issues — please regenerate');
+      setEl('genSub', 'AI had gaps — tap Generate to retry');
       setEl('genMainIcon', '⚠️');
+      showGenBanner('⚠️ Content quality check failed — please regenerate', 'warning');
       document.getElementById('generateBtn')?.removeAttribute('disabled');
       showToast('⚠️ Quality check failed — try generating again', 'error');
       break;
@@ -790,4 +803,22 @@ function showToast(msg, type = 'info') {
     el.style.animation = 'toastOut 0.3s ease forwards';
     setTimeout(() => el.remove(), 350);
   }, 3000);
+}
+
+// Shows a persistent banner inside the generating screen (warnings, API down, duplicates, etc.)
+function showGenBanner(msg, type) {
+  type = type || 'warning';
+  document.getElementById('genBanner') && document.getElementById('genBanner').remove();
+  var screen = document.getElementById('screen-generating');
+  if (!screen || !msg) return;
+  var banner = document.createElement('div');
+  banner.id = 'genBanner';
+  var bgMap = { warning:'linear-gradient(135deg,#7c3a00,#b85c00)', error:'linear-gradient(135deg,#4a0000,#8b0000)', info:'linear-gradient(135deg,#001a3a,#003366)' };
+  var borderMap = { warning:'#ff8c00', error:'#ff4444', info:'#0099ff' };
+  var iconMap = { warning:'??', error:'?', info:'??' };
+  banner.style.cssText = 'background:' + (bgMap[type]||bgMap.warning) + ';border:1px solid ' + (borderMap[type]||borderMap.warning) + ';color:#fff;padding:10px 14px;margin:12px 16px 0;border-radius:10px;font-size:13px;line-height:1.5;display:flex;gap:8px;align-items:flex-start;position:relative';
+  banner.innerHTML = '<span style="font-size:16px;flex-shrink:0">' + (iconMap[type]||'??') + '</span><span style="flex:1">' + msg + '</span><button onclick="this.parentElement.remove()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;opacity:0.7">&times;</button>';
+  var genLog = document.getElementById('genLogStream');
+  if (genLog) screen.insertBefore(banner, genLog); else screen.prepend(banner);
+  setTimeout(function() { banner && banner.remove(); }, 10000);
 }
