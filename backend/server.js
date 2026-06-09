@@ -124,7 +124,7 @@ setBroadcast(broadcast);
 app.get('/api/status', (req, res) => {
   res.json({
     status: 'online',
-    version: '1.0.0',
+    version: '2.0.0',
     pipeline: getPipelineState(),
     schedule: getScheduleStatus(),
     instagram_configured: publisher.isConfigured,
