@@ -44,7 +44,23 @@ const imageStore = new Map();
 // ================================
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../frontend')));
+
+// Serve frontend files — no-cache for JS/CSS/HTML so deploys are always picked up
+// Images use default caching (unique post IDs act as cache busters)
+app.use(express.static(path.join(__dirname, '../frontend'), {
+  etag: false,
+  lastModified: false,
+  setHeaders(res, filePath) {
+    if (filePath.endsWith('.js') || filePath.endsWith('.css') || filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    } else {
+      // Images and other assets — cache for 1 hour
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+    }
+  }
+}));
 
 // Serve generated carousel images — disk first, in-memory fallback
 // This keeps URL-based <img src="/images/..."> working even after Render disk wipes.
