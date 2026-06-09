@@ -207,7 +207,7 @@ async function runPipeline(options = {}) {
     }
 
     // ================================
-    // STEP 3.5: QUALITY VALIDATION LOOP
+    // STEP 3.5: QUALITY VALIDATION — TIER 1 (first attempt)
     // ================================
     log('🔍 STEP 3.5: Running quality checks on every slide field...', 'info');
     pipelineState.currentStep = 'quality';
@@ -225,15 +225,7 @@ async function runPipeline(options = {}) {
       contentData.posts[i] = validatedPost;
 
       const slideCount = Object.keys(validatedPost.slides || {}).length;
-      const reportEntry = {
-        rank: post.rank,
-        headline: post.headline,
-        passed,
-        attempts,
-        slide_count: slideCount,
-        remaining_issues: issues
-      };
-      qualityReport.push(reportEntry);
+      qualityReport.push({ rank: post.rank, headline: post.headline, passed, attempts, slide_count: slideCount, remaining_issues: issues });
 
       if (passed) {
         log(`  ✅ Post #${post.rank} PASSED — ${slideCount}/10 slides, all fields filled`, 'success');
@@ -244,11 +236,70 @@ async function runPipeline(options = {}) {
       }
     }
 
-    // Save quality report alongside content
-    const qualityReportPath = path.join(POSTS_DIR, `quality_${new Date().toISOString().split('T')[0]}.json`);
-    fs.writeFileSync(qualityReportPath, JSON.stringify({ qualityPassed, qualityReport, checked_at: new Date().toISOString() }, null, 2));
+    // ================================
+    // STEP 3.5b: QUALITY — TIER 2 (auto-retry full content generation if Tier 1 failed)
+    // ================================
+    let usedFallback = false;
+    if (!qualityPassed) {
+      log('🔄 STEP 3.5b: Quality failed — auto-retrying full content generation (Attempt 2/2)...', 'warning');
+      if (broadcast) broadcast({
+        type: 'status_update', level: 'warning',
+        message: '🔄 Quality check failed — auto-retrying with a fresh generation attempt...'
+      });
 
-    // Save validated content
+      try {
+        // Full fresh content generation — different random seed, same topic
+        const retryContentData = await generateAllContent(filteredNews, { pattern, theme });
+        const retryReport = [];
+        let retryPassed = true;
+
+        for (let i = 0; i < retryContentData.posts.length; i++) {
+          const post = retryContentData.posts[i];
+          const newsItem = filteredNews.selected_items[i] || filteredNews.selected_items[0];
+          const { post: validatedPost, passed, attempts, issues } = await validateAndFix(post, newsItem, 3);
+          retryContentData.posts[i] = validatedPost;
+          retryReport.push({ rank: post.rank, headline: post.headline, passed, attempts, issues });
+          if (passed) {
+            log(`  ✅ Retry attempt PASSED for post #${post.rank}`, 'success');
+          } else {
+            retryPassed = false;
+            log(`  ❌ Retry attempt also failed for post #${post.rank}`, 'error');
+          }
+        }
+
+        if (retryPassed) {
+          // Retry succeeded — use retry content
+          contentData = retryContentData;
+          qualityPassed = true;
+          log('✅ RETRY SUCCEEDED — using fresh high-quality content', 'success');
+          if (broadcast) broadcast({
+            type: 'status_update', level: 'success',
+            message: '✅ Retry successful — fresh high-quality content generated!'
+          });
+        } else {
+          // Both attempts failed — use fallback as true last resort
+          usedFallback = true;
+          log('⚠️ Both attempts failed — using guaranteed fallback content as last resort', 'warning');
+          log('💡 Fallback ensures slides are rendered. Tap Regenerate for fresh AI content.', 'info');
+          if (broadcast) broadcast({
+            type: 'quality_warning',
+            data: {
+              message: '⚠️ Backup content used after 2 failed attempts. Tap “Regenerate” for fresh AI content.',
+              tip: 'This happens when AI has a busy moment. Your slides will still be complete.'
+            }
+          });
+        }
+      } catch (retryErr) {
+        usedFallback = true;
+        log(`⚠️ Auto-retry threw an error: ${retryErr.message} — using fallback`, 'warning');
+      }
+    }
+
+    // Save quality report
+    const qualityReportPath = path.join(POSTS_DIR, `quality_${new Date().toISOString().split('T')[0]}.json`);
+    fs.writeFileSync(qualityReportPath, JSON.stringify({ qualityPassed, usedFallback, qualityReport, checked_at: new Date().toISOString() }, null, 2));
+
+    // Save final content (after any retries)
     fs.writeFileSync(contentFile, JSON.stringify({
       run_id: pipelineResult.run_id,
       research: newsData,
@@ -260,44 +311,24 @@ async function runPipeline(options = {}) {
     // STEP 3.6: RECORD TO TOPIC MEMORY
     // ================================
     try {
-      for (const post of contentData.posts) {
-        recordTopic(post);
-      }
+      for (const post of contentData.posts) recordTopic(post);
       log('📝 Topics recorded to 30-day memory (prevents future repeats)', 'info');
     } catch (memErr) {
       log(`⚠️ Topic memory recording failed (non-fatal): ${memErr.message}`, 'warning');
     }
 
-    // ✅ SOFT QUALITY GATE — use fallback on failure instead of hard blocking
-    if (!qualityPassed) {
-      const failedPosts = qualityReport.filter(r => !r.passed);
-      log(`⚠️ Quality issues in ${failedPosts.length} post(s) — fallback content is already applied, continuing to render...`, 'warning');
-      log('💡 Fallback content is guaranteed valid — slides will have real content', 'info');
-      failedPosts.forEach(p => {
-        log(`  ⚠️ Post "${p.headline}" used fallback after ${p.attempts} attempts`, 'warning');
-      });
-
-      // Broadcast a warning (not a hard failure) — pipeline continues
-      if (broadcast) broadcast({
-        type: 'quality_warning',
-        data: {
-          message: '⚠️ AI had some gaps — using guaranteed fallback content. Slides will still be great!',
-          report: qualityReport,
-        }
-      });
-
-      // Mark quality as complete with warning (not failed)
-      updateStep('quality', 'complete', {
-        all_passed: false,
-        used_fallback: true,
-        posts_checked: qualityReport.length,
-        warning: 'Fallback content applied — rendering anyway'
-      });
-    } else {
+    // Quality gate result
+    if (qualityPassed) {
       updateStep('quality', 'complete', { all_passed: true, posts_checked: qualityReport.length });
       log(`✅ QUALITY GATE PASSED — all ${qualityReport.length} post(s) are 100% ready!`, 'success');
+    } else if (usedFallback) {
+      updateStep('quality', 'complete', {
+        all_passed: false, used_fallback: true,
+        warning: '⚠️ Fallback used after 2 failed attempts — tap Regenerate for fresh AI content'
+      });
+      log('⚠️ Proceeding with fallback content — user informed to regenerate for best quality', 'warning');
     }
-    if (broadcast) broadcast({ type: 'step_complete', step: 'quality', data: { all_passed: qualityPassed } });
+    if (broadcast) broadcast({ type: 'step_complete', step: 'quality', data: { all_passed: qualityPassed, used_fallback: usedFallback } });
 
     // ================================
     // STEP 4: CAROUSEL RENDERING (8:45 AM)
