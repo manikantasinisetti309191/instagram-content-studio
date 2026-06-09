@@ -128,6 +128,63 @@ const MIN_CHARS = {
   default:5,
 };
 
+// ─────────────────────────────────────────
+// SEMANTIC VALIDATORS
+// Deep field-level checks beyond "is it empty?" —
+// catches real quality problems like tool_name = full headline
+// ─────────────────────────────────────────
+const SEMANTIC_VALIDATORS = {
+
+  // tool_name should be brand/product name only — max 5 words, no action verbs
+  tool_name(val) {
+    if (val.split(' ').length > 5)
+      return `tool_name looks like a full headline — should be brand name only (e.g. "Runway Gen-3", "GPT-5")`;
+    if (/\b(makes|launches|beats|releases|announces|drops|debuts|unveils|introduces|adds|gets|reveals|builds|creates|generates)\b/i.test(val))
+      return `tool_name contains action verbs — extract only the product name`;
+    return null;
+  },
+
+  // tagline must be specific to this tool, not generic boilerplate
+  tagline(val) {
+    const genericPhrases = ['the ai tool everyone is talking about','this tool','game-changing ai','revolutionary ai'];
+    if (genericPhrases.some(p => val.toLowerCase().includes(p)))
+      return `tagline is too generic — describe what THIS specific tool actually does`;
+    if (val.split(' ').length > 10)
+      return `tagline is too long — keep under 10 words`;
+    return null;
+  },
+
+  // prompt_text must be a real usable prompt, not a description of one
+  prompt_text(val) {
+    if (val.length < 100)
+      return `prompt_text is only ${val.length} chars — must be a real copy-paste prompt of 100+ chars`;
+    if (!/you|act as|write|generate|create|explain|list|give me|help me|analyze|summarize|rewrite|respond/i.test(val))
+      return `prompt_text doesn't look like a real prompt — should start with an action word`;
+    if (/^(a prompt|this prompt|use this|here is a|enter this|copy this)/i.test(val.trim()))
+      return `prompt_text starts with a description — write the actual prompt text, not instructions about it`;
+    return null;
+  },
+
+  // Scores must be in X/10 format
+  tool_a_score(val) {
+    if (!/^\d+(\.\d+)?\/10$/.test(val.trim()))
+      return `tool_a_score must be in "X/10" format (e.g. "8/10")`;
+    return null;
+  },
+  tool_b_score(val) {
+    if (!/^\d+(\.\d+)?\/10$/.test(val.trim()))
+      return `tool_b_score must be in "X/10" format (e.g. "7/10")`;
+    return null;
+  },
+
+  // verdict should be an opinion, not a question or very short
+  verdict(val) {
+    if (val.endsWith('?')) return `verdict is a question — write a bold confident opinion statement`;
+    if (val.split(' ').length < 5) return `verdict is too short — write a complete opinion of at least 5 words`;
+    return null;
+  },
+};
+
 const PLACEHOLDER_RE = /^string$|^\[|^undefined$|^null$|^Your\s/i;
 
 // ─────────────────────────────────────────
@@ -149,6 +206,11 @@ function validateField(slideKey, field, val) {
   }
   if (v.includes('...')) {
     issues.push(`${slideKey}.${field}: CONTAINS ELLIPSIS — write complete text`);
+  }
+  // ── Semantic validation (deep quality checks) ──────────────────────────
+  if (SEMANTIC_VALIDATORS[field]) {
+    const semanticError = SEMANTIC_VALIDATORS[field](v);
+    if (semanticError) issues.push(`${slideKey}.${field}: SEMANTIC — ${semanticError}`);
   }
   return issues;
 }

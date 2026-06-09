@@ -6,6 +6,10 @@
   "scripts": {
     "start": "node backend/server.js",
     "dev": "nodemon backend/server.js",
+    "test:integration": "node backend/scripts/integrationTest.js",
+    "test:deploy": "node backend/scripts/postDeployCheck.js",
+    "test:deploy:wait": "node backend/scripts/postDeployCheck.js --wait",
+    "test:all": "npm run test:integration && npm run test:deploy",
     "test:research": "node backend/agents/researchAgent.js --test",
     "test:content": "node backend/agents/contentAgent.js --test",
     "test:carousel": "node backend/services/carouselRenderer.js --test",
