@@ -303,9 +303,10 @@ window.refreshBuildInfo = async function() {
 async function loadLatestPost() {
   try {
     const data = await api('/api/latest');
+    // Server is alive — dismiss any wakeup toast
+    dismissWakeupToast();
     const posts = data?.content?.posts;
     if (!posts?.length) {
-      // Show compelling empty state on the home screen card
       showEmptyPostState();
       return;
     }
@@ -328,8 +329,20 @@ async function loadLatestPost() {
     populateReviewScreen(post);
     return post;
   } catch (err) {
-    // Network error — server might be cold-starting
-    showServerWakeupToast();
+    // 404 = server alive but no posts yet — show empty state, NOT wakeup toast
+    if (err.status === 404 || (err.message && err.message.includes('No posts'))) {
+      dismissWakeupToast();
+      showEmptyPostState();
+      return;
+    }
+    // TypeError = true network failure = server is sleeping
+    if (err instanceof TypeError || !err.status) {
+      showServerWakeupToast();
+    } else {
+      // Other HTTP error (500 etc) — server alive but broken
+      dismissWakeupToast();
+      showEmptyPostState();
+    }
   }
 }
 
@@ -338,21 +351,48 @@ async function loadLatestPost() {
  * progress bar and auto-retries loadLatestPost after 30 seconds.
  */
 let _wakeupToastActive = false;
+let _wakeupRetryCount = 0;
+const MAX_WAKEUP_RETRIES = 3;
+
+function dismissWakeupToast() {
+  _wakeupToastActive = false;
+  _wakeupRetryCount = 0;
+  const existing = document.querySelector('.server-wakeup-toast');
+  if (existing) existing.remove();
+}
+
 function showServerWakeupToast() {
   if (_wakeupToastActive) return;
+
+  // After MAX_WAKEUP_RETRIES, stop looping and show a clear message
+  if (_wakeupRetryCount >= MAX_WAKEUP_RETRIES) {
+    const card = document.getElementById('lastPostCard');
+    if (card) card.innerHTML = `
+      <div class="last-post-empty">
+        <div class="empty-icon">⚠️</div>
+        <div class="empty-title">Server unavailable</div>
+        <div class="empty-sub">Pull down to refresh or try again in a moment</div>
+        <button class="empty-generate-btn" onclick="location.reload()">Reload App ↻</button>
+      </div>`;
+    _wakeupRetryCount = 0;
+    return;
+  }
+
   _wakeupToastActive = true;
+  _wakeupRetryCount++;
 
   const container = document.getElementById('toastContainer');
   if (!container) return;
 
   const el = document.createElement('div');
   el.className = 'toast server-wakeup-toast';
+  const attempt = _wakeupRetryCount > 1 ? ` (attempt ${_wakeupRetryCount}/${MAX_WAKEUP_RETRIES})` : '';
   el.innerHTML = `
     <div class="swt-icon">🔌</div>
     <div class="swt-body">
-      <div class="swt-title">Server is waking up...</div>
-      <div class="swt-sub">(Render free tier spins down after 15 min)</div>
-      <div class="swt-sub">This takes about 30 seconds. Refreshing automatically...</div>
+      <div class="swt-title">Server is waking up…${attempt}</div>
+      <div class="swt-sub">Render free tier sleeps after 15 min of inactivity</div>
+      <div class="swt-sub">Auto-retrying in 30 seconds…</div>
       <div class="swt-progress-wrap"><div class="swt-progress-bar" id="swtProgressBar"></div></div>
     </div>`;
   container.appendChild(el);
@@ -369,8 +409,7 @@ function showServerWakeupToast() {
       clearInterval(tick);
       el.remove();
       _wakeupToastActive = false;
-      // Auto-retry
-      loadLatestPost();
+      loadLatestPost(); // retry
     }
   }, 1000);
 }
@@ -975,7 +1014,9 @@ async function api(path, method = 'GET', body = null) {
   const res = await fetch(path, opts);
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || `HTTP ${res.status}`);
+    const e = new Error(err.error || `HTTP ${res.status}`);
+    e.status = res.status; // attach HTTP status so callers can distinguish 404 vs network error
+    throw e;
   }
   return res.json();
 }
