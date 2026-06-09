@@ -379,18 +379,18 @@ function buildGuaranteedFallback(newsItem, rank, pattern = 'A') {
 // ─────────────────────────────────────────
 // VALIDATE + AUTO-FIX LOOP
 // ─────────────────────────────────────────
-async function validateAndFix(post, newsItem, maxAttempts = 3) {
+async function validateAndFix(post, newsItem, maxAttempts = 5) {
   let current = JSON.parse(JSON.stringify(post));
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const issues = validateAllSlides(current);
 
     if (issues.length === 0) {
-      console.log(`  ✅ Quality PASSED${attempt > 1 ? ` after ${attempt-1} fix(es)` : ' on first try'}`);
+      console.log(`  ✅ Quality PASSED${attempt > 1 ? ` after ${attempt-1} AI fix(es)` : ' on first try'}`);
       return { post: current, passed: true, attempts: attempt, issues: [] };
     }
 
-    console.log(`  ⚠️  Attempt ${attempt}/${maxAttempts} — ${issues.length} issues:`);
+    console.log(`  ⚠️  Attempt ${attempt}/${maxAttempts} — ${issues.length} issue(s) found:`);
     issues.forEach(i => console.log(`     ❌ ${i}`));
 
     if (attempt >= maxAttempts) break;
@@ -407,15 +407,15 @@ async function validateAndFix(post, newsItem, maxAttempts = 3) {
       }
       if (fixed.caption) current.caption = { ...current.caption, ...fixed.caption };
       if (fixed.hashtags?.length >= 20) current.hashtags = fixed.hashtags;
-      console.log(`  ✔️  AI fixes applied — re-validating...`);
+      console.log(`  ✔️  AI fixes applied (attempt ${attempt}) — re-validating...`);
     } catch (err) {
-      console.error(`  ❌ AI fix failed: ${err.message} — applying manual fixes`);
+      console.error(`  ❌ AI fix attempt ${attempt} failed: ${err.message} — applying manual field fixes`);
       current = applyManualFixes(current, newsItem, issues);
     }
   }
 
-  // Still failing — use guaranteed fallback
-  console.log(`  ⚠️  Using guaranteed fallback after ${maxAttempts} attempts`);
+  // All 5 attempts exhausted — signal failure so pipeline triggers full regeneration
+  console.log(`  ❌ Quality still failing after ${maxAttempts} attempts — triggering pipeline-level retry`);
   return { post: buildGuaranteedFallback(newsItem, post.rank, post.pattern || 'A'), passed: false, attempts: maxAttempts, issues: validateAllSlides(current) };
 }
 

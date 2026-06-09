@@ -226,22 +226,43 @@ CATEGORY: ${cat}
 
 Generate a 10-slide PATTERN ${pattern} (${pName}) Instagram carousel.
 
-CRITICAL RULES — breaking any of these means the content is rejected:
-- NEVER write "..." in any field — always write complete sentences
-- NEVER use placeholder text: [string], [ToolName], [URL], your_, undefined, null
-- prompt_text fields must be REAL, SPECIFIC, COPY-PASTEABLE prompts of at least 100 characters — write the ACTUAL PROMPT TEXT not a description
-- All steps/actions need EXACT details: real URLs, real tool names, real commands
-- Minimum 50 characters per descriptive field
-- Every slide must make the reader NEED to see the next one
+QUALITY CONTRACT — your output will be automatically validated. Any failure = auto-rejected and re-generated:
+
+❌ BANNED (instant rejection):
+- "..." anywhere in any field
+- Placeholder text: [string], [ToolName], [URL], undefined, null, "your_", "example"
+- Describing a prompt instead of writing it ("Use this prompt" / "A prompt that...")
+- Any field shorter than its minimum (see below)
+- tool_a_score / tool_b_score not in exact "X/10" format (e.g. "8/10", "7.5/10")
+- tool_name containing action verbs (launches, makes, beats, drops, announces)
+- Repeating the same step across slide_3, slide_4, slide_5
+
+✅ MINIMUM CHARACTER COUNTS (you must exceed these):
+- prompt_text: 120+ characters of ACTUAL prompt text — must start with an action word (Act as / You are / Write / Generate / Analyze / Create / List)
+- before_example / after_example: 60+ characters each — must be real prompts
+- one_liner / analogy / key_fact: 20+ characters
+- tagline: under 8 words, specific to THIS tool (not generic)
+- tool_name: brand/product name only, max 4 words, no verbs
+- verdict: 10+ words, must be an opinion statement (not a question)
+- all step fields (step_1, step_2, step_3, action, exact_input): 20+ characters
+- all "for_X" audience fields: 10+ characters
+- myth_text / truth_text: 20+ characters, must be specific
+- all "reason" fields: 15+ characters
+
+✅ SELF-CHECK: Before returning JSON, mentally verify:
+1. Is every prompt_text immediately usable if pasted into ChatGPT? (Yes/No → fix if No)
+2. Does every step have a specific real URL or tool name? (Yes/No → fix if No)
+3. Is tool_name the brand name only, not the headline? (Yes/No → fix if No)
+4. Are scores in X/10 format? (Yes/No → fix if No)
 
 SLIDE INSTRUCTIONS:
 ${instructions[pattern]}
 
 Also generate:
-- caption with fields: hook (scroll-stopping first line), body (3 short paragraphs), engagement_prompt (specific question), save_prompt (why to save), call_to_action, full_caption (assembled with all parts)
-- hashtags: array of exactly 25 relevant hashtags
+- caption with fields: hook (scroll-stopping first line with emoji), body (3 short punchy paragraphs), engagement_prompt (specific debate-starting question), save_prompt (compelling reason to save), call_to_action, full_caption (all parts assembled with line breaks)
+- hashtags: array of exactly 25 relevant hashtags (mix: 2 mega, 5 large, 8 medium, 5 niche, 5 micro)
 
-Fill in ALL empty fields in this JSON structure. Return ONLY valid JSON — no markdown, no explanation, no code fences:
+Fill in ALL empty fields in this JSON. Return ONLY valid JSON — no markdown, no code fences, no explanation:
 
 ${schemaByPattern[pattern]}`;
 }

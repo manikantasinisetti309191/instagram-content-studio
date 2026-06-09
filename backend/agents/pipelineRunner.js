@@ -237,61 +237,63 @@ async function runPipeline(options = {}) {
     }
 
     // ================================
-    // STEP 3.5b: QUALITY — TIER 2 (auto-retry full content generation if Tier 1 failed)
+    // STEP 3.5b: QUALITY — TIER 2 & 3 (up to 2 full regeneration attempts if Tier 1 failed)
     // ================================
     let usedFallback = false;
+
     if (!qualityPassed) {
-      log('🔄 STEP 3.5b: Quality failed — auto-retrying full content generation (Attempt 2/2)...', 'warning');
-      if (broadcast) broadcast({
-        type: 'status_update', level: 'warning',
-        message: '🔄 Quality check failed — auto-retrying with a fresh generation attempt...'
-      });
+      const MAX_PIPELINE_RETRIES = 2; // 3 total attempts including first
 
-      try {
-        // Full fresh content generation — different random seed, same topic
-        const retryContentData = await generateAllContent(filteredNews, { pattern, theme });
-        const retryReport = [];
-        let retryPassed = true;
+      for (let retryNum = 1; retryNum <= MAX_PIPELINE_RETRIES && !qualityPassed; retryNum++) {
+        log(`🔄 STEP 3.5b: Quality failed — full regeneration attempt ${retryNum + 1}/${MAX_PIPELINE_RETRIES + 1}...`, 'warning');
+        if (broadcast) broadcast({
+          type: 'status_update', level: 'warning',
+          message: `🔄 Quality check failed — auto-retrying (attempt ${retryNum + 1} of ${MAX_PIPELINE_RETRIES + 1})...`
+        });
 
-        for (let i = 0; i < retryContentData.posts.length; i++) {
-          const post = retryContentData.posts[i];
-          const newsItem = filteredNews.selected_items[i] || filteredNews.selected_items[0];
-          const { post: validatedPost, passed, attempts, issues } = await validateAndFix(post, newsItem, 3);
-          retryContentData.posts[i] = validatedPost;
-          retryReport.push({ rank: post.rank, headline: post.headline, passed, attempts, issues });
-          if (passed) {
-            log(`  ✅ Retry attempt PASSED for post #${post.rank}`, 'success');
-          } else {
-            retryPassed = false;
-            log(`  ❌ Retry attempt also failed for post #${post.rank}`, 'error');
-          }
-        }
+        try {
+          const retryContentData = await generateAllContent(filteredNews, { pattern, theme });
+          let retryPassed = true;
 
-        if (retryPassed) {
-          // Retry succeeded — use retry content
-          contentData = retryContentData;
-          qualityPassed = true;
-          log('✅ RETRY SUCCEEDED — using fresh high-quality content', 'success');
-          if (broadcast) broadcast({
-            type: 'status_update', level: 'success',
-            message: '✅ Retry successful — fresh high-quality content generated!'
-          });
-        } else {
-          // Both attempts failed — use fallback as true last resort
-          usedFallback = true;
-          log('⚠️ Both attempts failed — using guaranteed fallback content as last resort', 'warning');
-          log('💡 Fallback ensures slides are rendered. Tap Regenerate for fresh AI content.', 'info');
-          if (broadcast) broadcast({
-            type: 'quality_warning',
-            data: {
-              message: '⚠️ Backup content used after 2 failed attempts. Tap “Regenerate” for fresh AI content.',
-              tip: 'This happens when AI has a busy moment. Your slides will still be complete.'
+          for (let i = 0; i < retryContentData.posts.length; i++) {
+            const post = retryContentData.posts[i];
+            const newsItem = filteredNews.selected_items[i] || filteredNews.selected_items[0];
+            const { post: validatedPost, passed, attempts } = await validateAndFix(post, newsItem, 5);
+            retryContentData.posts[i] = validatedPost;
+            if (passed) {
+              log(`  ✅ Retry ${retryNum} PASSED for post #${post.rank} after ${attempts} fix(es)`, 'success');
+            } else {
+              retryPassed = false;
+              log(`  ❌ Retry ${retryNum} also failed for post #${post.rank}`, 'error');
             }
-          });
+          }
+
+          if (retryPassed) {
+            contentData = retryContentData;
+            qualityPassed = true;
+            log(`✅ RETRY ${retryNum} SUCCEEDED — high-quality content ready`, 'success');
+            if (broadcast) broadcast({
+              type: 'status_update', level: 'success',
+              message: `✅ Retry ${retryNum} successful — fresh high-quality content generated!`
+            });
+          }
+        } catch (retryErr) {
+          log(`⚠️ Retry ${retryNum} threw an error: ${retryErr.message}`, 'warning');
         }
-      } catch (retryErr) {
+      }
+
+      // All 3 attempts exhausted — fallback is true last resort
+      if (!qualityPassed) {
         usedFallback = true;
-        log(`⚠️ Auto-retry threw an error: ${retryErr.message} — using fallback`, 'warning');
+        log(`⚠️ All 3 attempts failed — using guaranteed fallback as LAST RESORT`, 'warning');
+        log('💡 User informed to tap Regenerate for fresh AI content', 'info');
+        if (broadcast) broadcast({
+          type: 'quality_warning',
+          data: {
+            message: '⚠️ Backup content used after 3 failed attempts. Tap “Regenerate” for full AI quality.',
+            tip: 'This is very rare. Tap Regenerate once and it will succeed.'
+          }
+        });
       }
     }
 
