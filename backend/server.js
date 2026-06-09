@@ -136,11 +136,14 @@ setBroadcast(broadcast);
 // API ROUTES
 // ================================
 
+const SERVER_START_TIME = new Date().toISOString(); // Captured at boot = deploy time on Render
+
 // System status
 app.get('/api/status', (req, res) => {
   res.json({
     status: 'online',
-    version: '2.0.0',
+    version: '2.1.0',
+    deploy_time: SERVER_START_TIME,
     pipeline: getPipelineState(),
     schedule: getScheduleStatus(),
     instagram_configured: publisher.isConfigured,

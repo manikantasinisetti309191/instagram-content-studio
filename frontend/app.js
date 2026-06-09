@@ -253,12 +253,51 @@ async function checkStatus() {
       S.isGenerating = true;
       setStatusPill('running', 'Running...');
     }
+    updateBuildBadge(data);
   } catch (_) {
     S.serverOnline = false;
     const srv = document.getElementById('settings-server');
     if (srv) { srv.textContent = 'Offline ⚠️'; srv.className = 'settings-val red'; }
   }
 }
+
+// ==================== BUILD BADGE ====================
+function updateBuildBadge(data) {
+  if (!data) return;
+  const vEl = document.getElementById('buildVersion');
+  const tEl = document.getElementById('buildDeployTime');
+  if (vEl && data.version) vEl.textContent = 'v' + data.version;
+  if (tEl && data.deploy_time) {
+    const dt = new Date(data.deploy_time);
+    const now = new Date();
+    const diffMins = Math.floor((now - dt) / 60000);
+    const diffHrs  = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHrs / 24);
+    let ago;
+    if (diffMins < 2)       ago = 'just deployed ✨';
+    else if (diffMins < 60) ago = `${diffMins}m ago`;
+    else if (diffHrs < 24)  ago = `${diffHrs}h ago`;
+    else                    ago = `${diffDays}d ago`;
+    const timeStr = dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const dateStr = dt.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    tEl.textContent = `${dateStr} · ${timeStr} · ${ago}`;
+    const bar = document.getElementById('buildBadgeBar');
+    if (bar) bar.classList.toggle('build-badge-fresh', diffMins < 10);
+  }
+}
+
+window.refreshBuildInfo = async function() {
+  const icon = document.querySelector('.build-refresh-icon');
+  if (icon) { icon.style.transition = 'transform 0.5s'; icon.style.transform = 'rotate(360deg)'; }
+  setTimeout(() => { if (icon) { icon.style.transform = ''; } }, 550);
+  try {
+    const data = await api('/api/status');
+    updateBuildBadge(data);
+    showToast('✅ Build info refreshed', 'success', 2000);
+  } catch (_) {
+    showToast('⚠️ Could not reach server', 'error', 2000);
+  }
+};
 
 // ==================== LOAD LATEST POST ====================
 async function loadLatestPost() {

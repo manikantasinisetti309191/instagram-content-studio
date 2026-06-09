@@ -62,6 +62,15 @@
           </div>
         </header>
 
+        <!-- Build Badge — version + deploy timestamp -->
+        <div id="buildBadgeBar" class="build-badge-bar" onclick="refreshBuildInfo()" title="Tap to refresh">
+          <span class="build-badge-dot"></span>
+          <span id="buildVersion" class="build-version">v2.1.0</span>
+          <span class="build-badge-sep">·</span>
+          <span id="buildDeployTime" class="build-deploy-time">Checking deploy time…</span>
+          <span class="build-refresh-icon">↻</span>
+        </div>
+
         <!-- Last Post Card -->
         <div class="section-label">LAST GENERATED</div>
         <div id="lastPostCard" class="last-post-card">

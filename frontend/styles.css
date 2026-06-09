@@ -124,6 +124,41 @@ body {
 }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
+/* ==================== BUILD BADGE BAR ==================== */
+.build-badge-bar {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  margin: 0 0 14px 0;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--text3);
+  transition: background 0.2s, border-color 0.2s;
+  user-select: none;
+}
+.build-badge-bar:active { background: rgba(255,255,255,0.08); }
+.build-badge-bar.build-badge-fresh {
+  border-color: rgba(0,255,136,0.35);
+  background: rgba(0,255,136,0.06);
+  color: var(--green);
+}
+.build-badge-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--text3); flex-shrink: 0;
+}
+.build-badge-fresh .build-badge-dot { background: var(--green); }
+.build-version { font-weight: 700; color: var(--text2); font-size: 11px; }
+.build-badge-fresh .build-version { color: var(--green); }
+.build-badge-sep { color: var(--text3); opacity: 0.5; }
+.build-deploy-time { flex: 1; font-size: 11px; }
+.build-refresh-icon {
+  font-size: 13px; opacity: 0.5; margin-left: auto;
+  transition: transform 0.5s ease;
+}
+.build-badge-bar:hover .build-refresh-icon { opacity: 1; }
+
 /* ==================== SECTION LABEL ==================== */
 .section-label {
   font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
