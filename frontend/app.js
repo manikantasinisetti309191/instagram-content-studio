@@ -1,7 +1,7 @@
 /**
- * Content Studio — Mobile PWA App Logic v2.1
- * Fixes: strict-mode const-in-switch, history JSON bug, carousel touch,
- *        WS polling fallback, server wake-up UX, review scroll, publish success
+ * Content Studio — Mobile PWA App Logic v2.2
+ * Adds: Caption A/B tabs, better error states, topic memory widget,
+ *       server wakeup toast with countdown, empty post state
  */
 'use strict';
 
@@ -15,6 +15,9 @@ const S = {
   pollTimer: null,
   historyPosts: [],   // indexed store to avoid JSON-in-onclick bugs
   serverOnline: false,
+  activeCaptionTab: 'A',   // tracks which caption tab is selected
+  captionA: '',            // current caption A text
+  captionB: '',            // generated caption B text
 };
 
 // ==================== INIT ====================
@@ -262,7 +265,11 @@ async function loadLatestPost() {
   try {
     const data = await api('/api/latest');
     const posts = data?.content?.posts;
-    if (!posts?.length) return;
+    if (!posts?.length) {
+      // Show compelling empty state on the home screen card
+      showEmptyPostState();
+      return;
+    }
 
     const post = posts[0];
     S.currentPost = post;
@@ -281,7 +288,69 @@ async function loadLatestPost() {
     renderHistory(allP);
     populateReviewScreen(post);
     return post;
-  } catch (_) {}
+  } catch (err) {
+    // Network error — server might be cold-starting
+    showServerWakeupToast();
+  }
+}
+
+/**
+ * Shows a premium "Server is waking up" toast with a 30-second countdown
+ * progress bar and auto-retries loadLatestPost after 30 seconds.
+ */
+let _wakeupToastActive = false;
+function showServerWakeupToast() {
+  if (_wakeupToastActive) return;
+  _wakeupToastActive = true;
+
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+
+  const el = document.createElement('div');
+  el.className = 'toast server-wakeup-toast';
+  el.innerHTML = `
+    <div class="swt-icon">🔌</div>
+    <div class="swt-body">
+      <div class="swt-title">Server is waking up...</div>
+      <div class="swt-sub">(Render free tier spins down after 15 min)</div>
+      <div class="swt-sub">This takes about 30 seconds. Refreshing automatically...</div>
+      <div class="swt-progress-wrap"><div class="swt-progress-bar" id="swtProgressBar"></div></div>
+    </div>`;
+  container.appendChild(el);
+
+  // Animate progress bar over 30 seconds
+  let elapsed = 0;
+  const TOTAL = 30;
+  const bar = el.querySelector('#swtProgressBar');
+  if (bar) bar.style.width = '0%';
+  const tick = setInterval(() => {
+    elapsed++;
+    if (bar) bar.style.width = `${Math.min(100, (elapsed / TOTAL) * 100)}%`;
+    if (elapsed >= TOTAL) {
+      clearInterval(tick);
+      el.remove();
+      _wakeupToastActive = false;
+      // Auto-retry
+      loadLatestPost();
+    }
+  }, 1000);
+}
+
+/**
+ * Shows the compelling empty state in the lastPostCard.
+ */
+function showEmptyPostState() {
+  const card = document.getElementById('lastPostCard');
+  if (!card) return;
+  card.className = 'last-post-card';
+  card.onclick = null;
+  card.innerHTML = `
+    <div class="last-post-empty">
+      <div class="empty-icon">✨</div>
+      <div class="empty-title">No posts generated yet</div>
+      <div class="empty-sub">Tap Generate Post to create your first AI carousel</div>
+      <button class="empty-generate-btn" onclick="startGenerate()">Generate Post →</button>
+    </div>`;
 }
 
 function renderLastPostCard(post, data) {
@@ -311,7 +380,6 @@ function renderLastPostCard(post, data) {
     </div>`;
 }
 
-// ==================== POPULATE REVIEW ====================
 async function populateReviewScreen(post) {
   if (!post) return;
   S.currentPost = post;
@@ -340,14 +408,30 @@ async function populateReviewScreen(post) {
 
   await loadCarouselImages(post);
 
-  // Caption
+  // Caption A/B setup
   const caption = post.caption;
   if (caption) {
-    const captionEl = document.getElementById('captionBox');
-    if (captionEl) captionEl.textContent =
+    const fullCaption =
       caption.full_caption ||
       [caption.hook, caption.body, caption.engagement_prompt, caption.call_to_action].filter(Boolean).join('\n\n');
+
+    // Caption A = original
+    S.captionA = post.caption_b ? fullCaption : fullCaption;
+    const captionElA = document.getElementById('captionBox');
+    if (captionElA) captionElA.textContent = S.captionA;
+
+    // Caption B = server-provided or client-generated variant
+    if (post.caption_b) {
+      S.captionB = post.caption_b;
+    } else {
+      S.captionB = generateCaptionVariant(fullCaption, caption);
+    }
+    const captionElB = document.getElementById('captionBoxB');
+    if (captionElB) captionElB.textContent = S.captionB;
   }
+
+  // Reset to Caption A tab
+  switchCaptionTab('A');
 
   // Hashtags
   const hashtagEl = document.getElementById('hashtagBox');
@@ -360,6 +444,65 @@ async function populateReviewScreen(post) {
   // Re-attach touch events for the newly rendered carousel
   setupCarouselTouch();
 }
+
+/**
+ * Generates a Caption B variant client-side by:
+ * - Swapping the first two lines
+ * - Adjusting emoji placement
+ */
+function generateCaptionVariant(original, captionObj) {
+  // Strategy 1: if structured caption parts exist, rearrange them
+  if (captionObj && captionObj.hook && captionObj.body) {
+    const hook = captionObj.hook || '';
+    const body = captionObj.body || '';
+    const engagement = captionObj.engagement_prompt || '';
+    const cta = captionObj.call_to_action || '';
+
+    // Swap hook with a version that leads with the engagement question
+    const newHook = engagement
+      ? engagement + '\n\n' + hook
+      : hook.split(' ').reverse().slice(0, 6).join(' ') + '...';
+    const parts = [newHook, body, cta].filter(Boolean);
+    return parts.join('\n\n');
+  }
+
+  // Strategy 2: swap first two lines of the raw caption
+  const lines = original.split('\n');
+  if (lines.length >= 2) {
+    // Swap line 0 and line 1
+    const swapped = [lines[1], lines[0], ...lines.slice(2)].join('\n');
+    // Move trailing emojis to front
+    const emojiRegex = /([\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]+)$/u;
+    const match = swapped.match(emojiRegex);
+    if (match) {
+      return match[1] + ' ' + swapped.replace(emojiRegex, '').trim();
+    }
+    return swapped;
+  }
+  return original + '\n\n💡 Save this for later!';
+}
+
+// Caption tab switching
+window.switchCaptionTab = function(tab) {
+  S.activeCaptionTab = tab;
+  const tabA = document.getElementById('captionTabA');
+  const tabB = document.getElementById('captionTabB');
+  const panelA = document.getElementById('captionPanelA');
+  const panelB = document.getElementById('captionPanelB');
+  if (tabA) tabA.classList.toggle('active', tab === 'A');
+  if (tabB) tabB.classList.toggle('active', tab === 'B');
+  if (panelA) panelA.classList.toggle('hidden', tab !== 'A');
+  if (panelB) panelB.classList.toggle('hidden', tab !== 'B');
+};
+
+// Use caption — copies the active one to clipboard and marks it chosen
+window.useCaption = function(variant) {
+  const text = variant === 'B' ? S.captionB : S.captionA;
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast(`✅ Caption ${variant} copied & ready to use!`, 'success');
+  });
+};
 
 async function loadCarouselImages(post) {
   const track = document.getElementById('carouselTrack');
@@ -514,7 +657,8 @@ async function _runGenerate(pattern, theme, mode, topic) {
     stopPollFallback();
     showScreen('home');
     setStatusPill('error', 'Error');
-    showToast('❌ Failed to start: ' + (err.message || 'Check server'), 'error');
+    // Generation failed error state
+    showGenerationFailedError(err.message || 'Check server');
     document.getElementById('generateBtn')?.removeAttribute('disabled');
   }
 }
@@ -714,10 +858,18 @@ window.closeSuccessOverlay = function() {
 };
 
 // ==================== COPY ====================
-window.copyCaption = function() {
-  const el = document.getElementById('captionBox');
-  if (!el) return;
-  navigator.clipboard.writeText(el.textContent || '').then(() => showToast('✅ Caption copied!', 'success'));
+window.copyCaption = function(variant) {
+  // Support both old signature (no arg) and new (variant = 'A' | 'B')
+  let text;
+  if (variant === 'B') {
+    text = S.captionB;
+  } else {
+    // A or no arg — read from the DOM element for backward compat
+    const el = document.getElementById('captionBox');
+    text = el ? (el.textContent || S.captionA) : S.captionA;
+  }
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => showToast('✅ Caption copied!', 'success'));
 };
 window.copyHashtags = function() {
   const tags = [...document.querySelectorAll('.h-tag')].map(el => el.textContent).join(' ');
@@ -834,6 +986,33 @@ function showGenBanner(msg, type) {
   setTimeout(function() { banner && banner.remove(); }, 10000);
 }
 
+/**
+ * Shows a "Generation failed" error state with a Try Again button.
+ */
+function showGenerationFailedError(errorMsg) {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+
+  // Remove any existing failure toast
+  const old = document.getElementById('genFailedToast');
+  if (old) old.remove();
+
+  const el = document.createElement('div');
+  el.id = 'genFailedToast';
+  el.className = 'toast gen-failed-toast';
+  el.innerHTML = `
+    <div class="gft-icon">⚠️</div>
+    <div class="gft-body">
+      <div class="gft-title">Generation failed</div>
+      <div class="gft-msg">${esc(errorMsg)}</div>
+      <button class="gft-retry-btn" onclick="document.getElementById('genFailedToast')?.remove(); startGenerate();">Try Again</button>
+    </div>
+    <button class="gft-close" onclick="document.getElementById('genFailedToast')?.remove();">✕</button>`;
+  container.appendChild(el);
+  // Auto-dismiss after 15 seconds
+  setTimeout(() => el.remove(), 15000);
+}
+
 // ==================== GENERATE PICKER MODAL ====================
 const pickerState = {
   pattern: 'auto',
@@ -862,6 +1041,8 @@ window.openGeneratePicker = function() {
     });
   }
   document.body.style.overflow = 'hidden';
+  // Fetch and render topic memory
+  _loadTopicMemory();
 };
 
 window.closeGeneratePicker = function() {
@@ -972,3 +1153,39 @@ document.addEventListener('keydown', e => {
     if (overlay && !overlay.classList.contains('hidden')) closeGeneratePicker();
   }
 });
+
+// ==================== TOPIC MEMORY WIDGET ====================
+async function _loadTopicMemory() {
+  const listEl = document.getElementById('recentTopicsList');
+  if (!listEl) return;
+
+  listEl.innerHTML = '<span class="recent-topic-chip recent-topic-loading">Loading...</span>';
+
+  try {
+    const data = await api('/api/topic-memory');
+    const topics = data.topics || data.recent || data || [];
+
+    if (!Array.isArray(topics) || topics.length === 0) {
+      listEl.innerHTML = '<span class="recent-topic-empty">Fresh start — no repeated topics</span>';
+      return;
+    }
+
+    const now = Date.now();
+    listEl.innerHTML = topics.slice(0, 5).map(t => {
+      const topic = t.topic || t.title || t.headline || String(t);
+      let agoStr = '';
+      if (t.generated_at || t.date || t.created_at) {
+        const ms = new Date(t.generated_at || t.date || t.created_at).getTime();
+        const days = Math.round((now - ms) / 86400000);
+        agoStr = days === 0 ? 'today' : days === 1 ? '1 day ago' : `${days} days ago`;
+      }
+      return `<span class="recent-topic-chip">${esc(topic)}${agoStr ? ' • ' + agoStr : ''}</span>`;
+    }).join('');
+  } catch (_) {
+    const listEl2 = document.getElementById('recentTopicsList');
+    if (listEl2) listEl2.innerHTML = '<span class="recent-topic-empty">Topic memory unavailable</span>';
+  }
+}
+
+// ==================== POPULATE REVIEW (section header) ====================
+// (already defined above — this comment keeps section markers consistent)

@@ -183,11 +183,31 @@
 
       <!-- Caption Section -->
       <div class="caption-section">
-        <div class="caption-section-header">
-          <span class="caption-label">📝 Caption</span>
-          <button class="copy-btn" onclick="copyCaption()">Copy</button>
+        <!-- A/B Caption Tabs -->
+        <div class="caption-tabs">
+          <button class="caption-tab active" id="captionTabA" onclick="switchCaptionTab('A')">Caption A</button>
+          <button class="caption-tab" id="captionTabB" onclick="switchCaptionTab('B')">Caption B</button>
         </div>
-        <div id="captionBox" class="caption-box">Loading caption...</div>
+
+        <!-- Caption A Panel -->
+        <div id="captionPanelA" class="caption-panel">
+          <div class="caption-section-header">
+            <span class="caption-label">📝 Caption A</span>
+            <button class="copy-btn" onclick="copyCaption('A')">Copy</button>
+          </div>
+          <div id="captionBox" class="caption-box">Loading caption...</div>
+          <button class="use-caption-btn" onclick="useCaption('A')">✓ Use This Caption</button>
+        </div>
+
+        <!-- Caption B Panel -->
+        <div id="captionPanelB" class="caption-panel hidden">
+          <div class="caption-section-header">
+            <span class="caption-label">✨ Caption B</span>
+            <button class="copy-btn" onclick="copyCaption('B')">Copy</button>
+          </div>
+          <div id="captionBoxB" class="caption-box">Generating variant...</div>
+          <button class="use-caption-btn" onclick="useCaption('B')">✓ Use This Caption</button>
+        </div>
 
         <div class="caption-section-header" style="margin-top:16px">
           <span class="caption-label"># Hashtags</span>
@@ -530,6 +550,14 @@
           <span class="theme-name">Golden Hour</span>
         </button>
 
+      </div>
+
+      <!-- Recent Topics Memory -->
+      <div class="recent-topics-section" id="recentTopicsSection">
+        <div class="recent-topics-label">RECENTLY GENERATED (won't repeat)</div>
+        <div id="recentTopicsList" class="recent-topics-list">
+          <span class="recent-topic-chip recent-topic-loading">Loading...</span>
+        </div>
       </div>
 
       <!-- Generate CTA -->

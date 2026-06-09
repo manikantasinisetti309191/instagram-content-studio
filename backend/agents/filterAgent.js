@@ -9,6 +9,7 @@ require('dotenv').config({ path: require('path').join(__dirname, '../../.env') }
 const fs   = require('fs');
 const path = require('path');
 const { callGemini } = require('./geminiHelper');
+const { filterFreshTopics } = require('./topicMemoryAgent');
 
 const POSTS_DIR = path.join(__dirname, '../data/posts');
 
@@ -98,21 +99,33 @@ async function filterTopNews(newsData, options = {}) {
   console.log('🎯 Starting news filtering...');
   console.log(`📊 Evaluating ${newsData.news_items.length} news items...`);
 
+  // ── STEP 1: 30-day topic memory deduplication (strong similarity check) ────
+  const { fresh: memoryFreshItems, skipped: memorySkipped } = filterFreshTopics(newsData.news_items);
+  const afterMemoryFilter = memoryFreshItems.length >= 2 ? memoryFreshItems : newsData.news_items;
+  if (memorySkipped.length > 0) {
+    console.log(`📝 Topic memory: removed ${memorySkipped.length} topics used in past 30 days`);
+    if (broadcast) broadcast({
+      type: 'status_update', level: 'info',
+      message: `📝 Skipping ${memorySkipped.length} recently covered topic(s) from 30-day memory`
+    });
+  }
+
+  // ── STEP 2: 7-day file-based headline deduplication ─────────────────────────
   const recentHeadlines = getRecentHeadlines(7);
   if (recentHeadlines.length > 0) {
     console.log(`📋 Found ${recentHeadlines.length} recent headlines to avoid repeating`);
   }
 
   // Pre-filter: remove obvious duplicates before sending to AI
-  const freshItems = newsData.news_items.filter(item => !isDuplicate(item.headline, recentHeadlines));
-  const itemsToFilter = freshItems.length >= 3 ? freshItems : newsData.news_items; // Fall back to all if too many filtered
+  const freshItems = afterMemoryFilter.filter(item => !isDuplicate(item.headline, recentHeadlines));
+  const itemsToFilter = freshItems.length >= 3 ? freshItems : afterMemoryFilter; // Fall back if too many filtered
 
-  if (freshItems.length < newsData.news_items.length) {
-    console.log(`🔄 Filtered out ${newsData.news_items.length - freshItems.length} duplicate topics`);
+  if (freshItems.length < afterMemoryFilter.length) {
+    console.log(`🔄 Filtered out ${afterMemoryFilter.length - freshItems.length} duplicate topics (7-day check)`);
     if (broadcast) broadcast({
       type: 'status_update',
       level: 'info',
-      message: `🔄 Filtering out ${newsData.news_items.length - freshItems.length} recently covered topic(s) to keep content fresh`
+      message: `🔄 Filtering out ${afterMemoryFilter.length - freshItems.length} recently covered topic(s) to keep content fresh`
     });
   }
 

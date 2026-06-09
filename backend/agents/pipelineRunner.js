@@ -12,13 +12,15 @@ require('dotenv').config({ path: require('path').join(__dirname, '../../.env') }
 const fs = require('fs');
 const path = require('path');
 
-const { researchAINews } = require('./researchAgent');
-const { filterTopNews } = require('./filterAgent');
+const { researchAINews }    = require('./researchAgent');
+const { filterTopNews }     = require('./filterAgent');
 const { generateAllContent } = require('./contentAgent');
-const { validateAndFix } = require('./qualityAgent');
+const { validateAndFix }    = require('./qualityAgent');
 const { renderAllCarousels } = require('../services/carouselRenderer');
-const { publisher } = require('../services/instagramPublisher');
+const { publisher }         = require('../services/instagramPublisher');
 const { trackPost, getAnalytics } = require('../services/analyticsService');
+const { filterFreshTopics, recordTopic } = require('./topicMemoryAgent');
+const { generateHashtags }  = require('./hashtagAgent');
 
 const DATA_DIR = path.join(__dirname, '../data');
 const POSTS_DIR = path.join(DATA_DIR, 'posts');
@@ -190,6 +192,21 @@ async function runPipeline(options = {}) {
     if (broadcast) broadcast({ type: 'step_complete', step: 'content', data: contentData });
 
     // ================================
+    // STEP 3.2: UPGRADE HASHTAGS
+    // ================================
+    log('🏷️  STEP 3.2: Generating optimized topic-specific hashtags...', 'info');
+    try {
+      for (let i = 0; i < contentData.posts.length; i++) {
+        const post = contentData.posts[i];
+        const freshTags = await generateHashtags(post);
+        contentData.posts[i].hashtags = freshTags;
+        log(`  ✅ Hashtags upgraded: ${freshTags.length} tags for "${post.headline}"`, 'success');
+      }
+    } catch (hashErr) {
+      log(`  ⚠️ Hashtag upgrade failed (keeping defaults): ${hashErr.message}`, 'warning');
+    }
+
+    // ================================
     // STEP 3.5: QUALITY VALIDATION LOOP
     // ================================
     log('🔍 STEP 3.5: Running quality checks on every slide field...', 'info');
@@ -238,6 +255,18 @@ async function runPipeline(options = {}) {
       filter: filteredNews,
       content: contentData
     }, null, 2));
+
+    // ================================
+    // STEP 3.6: RECORD TO TOPIC MEMORY
+    // ================================
+    try {
+      for (const post of contentData.posts) {
+        recordTopic(post);
+      }
+      log('📝 Topics recorded to 30-day memory (prevents future repeats)', 'info');
+    } catch (memErr) {
+      log(`⚠️ Topic memory recording failed (non-fatal): ${memErr.message}`, 'warning');
+    }
 
     // ❌ HARD GATE: Do NOT proceed if quality failed
     if (!qualityPassed) {

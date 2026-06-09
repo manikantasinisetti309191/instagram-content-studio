@@ -451,6 +451,16 @@ app.get('/api/latest', (req, res) => {
   }
 });
 
+// GET /api/topic-memory — 30-day topic history + pattern stats for picker modal
+app.get('/api/topic-memory', (req, res) => {
+  try {
+    const { getMemoryStats, getRecentHeadlines } = require('./agents/topicMemoryAgent');
+    res.json({ stats: getMemoryStats(), recent: getRecentHeadlines(10) });
+  } catch (error) {
+    res.status(500).json({ error: error.message, recent: [], stats: {} });
+  }
+});
+
 // POST /api/generate - trigger pipeline (generate + render, no publish)
 app.post('/api/generate', async (req, res) => {
   const state = getPipelineState();
