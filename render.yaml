@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: instagram-content-studio
+    env: node
+    plan: free
+    branch: master
+    buildCommand: npm install
+    startCommand: node backend/server.js
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
