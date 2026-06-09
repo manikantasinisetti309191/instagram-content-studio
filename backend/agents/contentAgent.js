@@ -183,14 +183,15 @@ function buildPrompt(pattern, newsItem, rank) {
   };
 
   const instructions = {
-    A: `slide_1: label(TOOL DROP or JUST LAUNCHED or FREE TOOL), tool_name(exact AI tool name), tagline(what it does in 5-7 words), subtitle("Save this before it goes viral")
-slide_2: title("What Is [ToolName] Exactly?"), one_liner(1 crystal-clear sentence), analogy("It's like X but Y with a specific twist"), key_fact(surprising stat or real capability)
-slide_3/4/5: three DIFFERENT use cases each with use_case_title, who_its_for, step_1, step_2, step_3, time_saved
-slide_6: slide_label="COPY THIS PROMPT", prompt_name, prompt_text(REAL copy-pasteable prompt of AT LEAST 100 characters — write the actual prompt, not a description of it), expected_output("You'll get: [specific result]")
-slide_7: title("Who Is This For?"), for_students(specific benefit max 12 words), for_employees, for_creators, for_business
-slide_8: title("Start in 5 Minutes"), step_1("Go to [REAL URL]"), step_2(exact action), step_3(exact action), closing_line
-slide_9: title("The Honest Catch"), limitation_1(real limitation), limitation_2(real limitation), still_worth_it(strong reason it is still great)
-slide_10: verdict(bold opinion 15 words), save_cta, follow_cta, comment_question(specific question about this tool)`,
+    A: `TOOL NAME TO USE: Extract the AI tool/product brand name from the headline. Example: headline="Runway Gen-3 Makes Hollywood Videos" → tool_name="Runway Gen-3". headline="OpenAI launches GPT-5" → tool_name="GPT-5". Use ONLY the product/brand name, NOT the full headline.
+slide_1: label(pick best: TOOL DROP / JUST LAUNCHED / FREE TOOL / GAME CHANGER), tool_name(ONLY the brand/product name extracted above — max 3 words), tagline(what this specific tool does in 5-7 words — be specific to this tool, NOT generic), subtitle("Save this before it goes viral")
+slide_2: title("What Is [ToolName] Exactly?" — use the actual tool name), one_liner(1 crystal-clear sentence about what this specific tool does), analogy("It's like X but Y" — use a real familiar product as comparison), key_fact(surprising specific stat or real capability about THIS tool)
+slide_3/4/5: three DIFFERENT use cases each with use_case_title("Use It To [Specific Outcome]"), who_its_for("For: [specific audience]"), step_1(exact action with real URL or button name), step_2(exact next step), step_3(exact result step), time_saved("Saves X hours/week on [specific task]")
+slide_6: slide_label="COPY THIS PROMPT", prompt_name(descriptive name for what this prompt does), prompt_text(REAL copy-pasteable prompt using this tool — AT LEAST 120 characters — write the ACTUAL PROMPT TEXT you would paste into the tool, not a description of it), expected_output("You'll get: [specific result]")
+slide_7: title("Who Is This For?"), for_students(specific benefit max 12 words), for_employees(specific benefit), for_creators(specific benefit), for_business(specific benefit)
+slide_8: title("Start in 5 Minutes"), step_1("Go to [REAL URL for this tool]"), step_2(exact action inside the tool), step_3(exact first result step), closing_line("That's it. You're in." or similar)
+slide_9: title("The Honest Catch"), limitation_1(real specific limitation of THIS tool), limitation_2(another real limitation), still_worth_it(one strong specific reason it is still the best choice)
+slide_10: verdict(bold specific opinion about this tool in 15 words), save_cta("Save this guide — you'll need it later 🔖"), follow_cta("Follow @learnwithmanii for daily AI tool drops 🤖"), comment_question(specific question about this tool that invites debate)`,
     B: `slide_1: label="PROMPT PACK", headline("[N] [Model] Prompts That [Specific Benefit]"), subtitle("Copy-paste ready. Save this.")
 slide_2: title(engaging intro), context(why these prompts are different — 2 sentences), tease("I tested 100+ prompts. These survived.")
 slides 3-8 (6 prompts): prompt_number(1-6), prompt_name(descriptive), prompt_text(REAL FULL PROMPT AT LEAST 100 CHARS — must be immediately usable in ChatGPT/Claude/Gemini, NOT a description), use_when(specific situation), output_description(what you get — 8 words)
