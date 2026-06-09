@@ -880,6 +880,320 @@ const SLIDE_DRAWERS = {
   slide_10: drawSlide10,
 };
 
+// ─── UNIVERSAL PATTERN-AWARE SLIDE RENDERER ─────────────────────────────────
+// Renders any slide from patterns A/B/C/D/E using each schema's field names.
+// Falls back to old SLIDE_DRAWERS for backward-compatible legacy posts.
+function drawPatternSlide(ctx, slideNum, post) {
+  const s = post.slides[`slide_${slideNum}`] || {};
+  const pattern = post.pattern || 'legacy';
+  const total = Object.keys(post.slides || {}).length;
+  const themeKey = SLIDE_THEMES[((slideNum - 1) % 10) + 1] || SLIDE_THEMES[1];
+
+  // Background always drawn first
+  drawBackground(ctx, (slideNum % 5) || 5);
+
+  // Helper: wrap text on canvas
+  function wrap(text, maxW, maxLines) {
+    const lines = wrapText(ctx, stripEmoji(String(text || '')), maxW);
+    return maxLines ? lines.slice(0, maxLines) : lines;
+  }
+
+  // Helper: draw a text block
+  function block(text, x, y, font, color, align, maxW, maxLines) {
+    ctx.font = font;
+    ctx.fillStyle = color;
+    ctx.textAlign = align || 'center';
+    const lines = wrap(text, maxW || WIDTH - 120, maxLines || 5);
+    lines.forEach((line, i) => ctx.fillText(line, x, y + i * (parseInt(font) * 1.4)));
+    return y + lines.length * (parseInt(font) * 1.4);
+  }
+
+  // Helper: draw a rounded pill badge
+  function badge(text, cx, y, accent) {
+    const t = stripEmoji(String(text || '')).toUpperCase();
+    ctx.font = 'bold 26px Arial';
+    const tw = ctx.measureText(t).width;
+    const bw = tw + 40, bh = 46;
+    roundRectPath(ctx, cx - bw / 2, y, bw, bh, 23);
+    ctx.fillStyle = accent + '28';
+    ctx.fill();
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.fillStyle = accent;
+    ctx.textAlign = 'center';
+    ctx.fillText(t, cx, y + 31);
+  }
+
+  // Helper: draw a card box
+  function card(x, y, w, h) {
+    drawGlassCard(ctx, x, y, w, h, 16);
+  }
+
+  const acc = themeKey.accent;
+  const W = WIDTH, H = HEIGHT;
+  const cx = W / 2;
+
+  // ─── PATTERN A: Tool Spotlight ───────────────────────────────────────────
+  if (pattern === 'A') {
+    if (slideNum === 1) {
+      badge(s.label || 'TOOL DROP', cx, 110, acc);
+      const name = stripEmoji(s.tool_name || post.headline || '');
+      ctx.font = fitTitle(ctx, name, 880, 96, 48);
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      const nameLines = wrapText(ctx, name, 880);
+      let ny = nameLines.length > 1 ? 370 : 440;
+      nameLines.slice(0, 3).forEach((l, i) => ctx.fillText(l, cx, ny + i * 108));
+      ny += nameLines.length * 108;
+      block(s.tagline, cx, ny + 20, '400 40px Arial', acc, 'center', 880, 2);
+      block(s.subtitle, cx, H - 140, '300 30px Arial', 'rgba(255,255,255,0.55)', 'center', 880, 1);
+    } else if (slideNum === 2) {
+      let y = 130;
+      y = block(s.title || 'What Is It?', cx, y, 'bold 52px Arial', '#fff', 'center', 880, 2) + 30;
+      card(60, y, W - 120, 120); block(s.one_liner, cx, y + 44, '500 32px Arial', '#fff', 'center', W - 180, 2); y += 150;
+      block(s.analogy, cx, y, 'italic 500 34px Arial', acc, 'center', 880, 3); y += 160;
+      card(60, y, W - 120, 100); block(s.key_fact, cx, y + 40, 'bold 28px Arial', themeKey.accent === acc ? '#a78bfa' : acc, 'center', W - 180, 2);
+    } else if (slideNum >= 3 && slideNum <= 5) {
+      block(s.use_case_title, cx, 120, 'bold 44px Arial', acc, 'center', 880, 2);
+      block(s.who_its_for, cx, 195, '400 28px Arial', 'rgba(255,255,255,0.5)', 'center', 880, 1);
+      let y = 250;
+      [s.step_1, s.step_2, s.step_3].filter(Boolean).forEach((step, i) => {
+        card(48, y, W - 96, 118);
+        ctx.font = 'bold 30px Arial'; ctx.fillStyle = acc; ctx.textAlign = 'left'; ctx.fillText(`${i + 1}.`, 80, y + 50);
+        block(step, 122, y + 38, '500 27px Arial', '#fff', 'left', W - 190, 2); y += 138;
+      });
+      card(cx - 200, y + 14, 400, 66);
+      block(s.time_saved, cx, y + 50, 'bold 26px Arial', '#00ff88', 'center', 380, 1);
+    } else if (slideNum === 6) {
+      badge(s.slide_label || 'COPY THIS PROMPT', cx, 80, acc);
+      block(s.prompt_name, cx, 182, 'bold 38px Arial', '#fff', 'center', 880, 2);
+      card(48, 230, W - 96, 520);
+      ctx.font = '400 24px Courier New';
+      ctx.fillStyle = acc; ctx.textAlign = 'left';
+      wrapText(ctx, stripEmoji(s.prompt_text || ''), W - 160).slice(0, 13).forEach((l, i) => ctx.fillText(l, 78, 280 + i * 36));
+      block(s.expected_output, cx, 790, '500 26px Arial', '#a78bfa', 'center', 880, 2);
+    } else if (slideNum === 7) {
+      block(s.title || 'Who Is This For?', cx, 130, 'bold 50px Arial', '#fff', 'center', 880, 2);
+      const segs = [['Students', s.for_students], ['Employees', s.for_employees], ['Creators', s.for_creators], ['Business', s.for_business]];
+      const cw = (W - 120) / 2;
+      segs.forEach(([label, val], i) => {
+        const col = i % 2, row = Math.floor(i / 2);
+        const cx2 = 48 + col * (cw + 24) + cw / 2, cy = 210 + row * 300;
+        card(48 + col * (cw + 24), cy, cw, 280);
+        block(label, cx2, cy + 44, 'bold 26px Arial', acc, 'center', cw - 20, 1);
+        block(val, cx2, cy + 86, '400 23px Arial', 'rgba(255,255,255,0.75)', 'center', cw - 30, 5);
+      });
+    } else if (slideNum === 8) {
+      block(s.title || 'Start in 5 Minutes', cx, 128, 'bold 50px Arial', '#fff', 'center', 880, 2);
+      let y = 210;
+      [s.step_1, s.step_2, s.step_3].filter(Boolean).forEach((step, i) => {
+        card(48, y, W - 96, 126);
+        ctx.font = 'bold 34px Arial'; ctx.fillStyle = acc; ctx.textAlign = 'left'; ctx.fillText(`${i + 1}`, 82, y + 54);
+        block(step, 124, y + 38, '500 28px Arial', '#fff', 'left', W - 190, 2); y += 150;
+      });
+      block(s.closing_line || "That's it. You're in.", cx, y + 36, 'bold 32px Arial', '#00ff88', 'center', 880, 2);
+    } else if (slideNum === 9) {
+      block(s.title || 'The Honest Catch', cx, 128, 'bold 50px Arial', '#fff', 'center', 880, 2);
+      let y = 220;
+      [s.limitation_1, s.limitation_2].filter(Boolean).forEach(lim => {
+        drawGlassCard(ctx, 48, y, W - 96, 126, 14);
+        ctx.font = 'bold 30px Arial'; ctx.fillStyle = '#ff8080'; ctx.textAlign = 'left'; ctx.fillText('X', 80, y + 54);
+        block(lim, 122, y + 38, '500 27px Arial', 'rgba(255,255,255,0.8)', 'left', W - 190, 2); y += 150;
+      });
+      drawGlassCard(ctx, 48, y + 16, W - 96, 152, 14);
+      block('Still worth it:', cx, y + 56, 'bold 28px Arial', '#00ff88', 'center', 880, 1);
+      block(s.still_worth_it, cx, y + 98, '500 26px Arial', '#fff', 'center', W - 140, 2);
+    } else if (slideNum === 10) {
+      drawSlide10(ctx, s, post);
+    }
+
+  // ─── PATTERN B: Prompt Playbook ──────────────────────────────────────────
+  } else if (pattern === 'B') {
+    if (slideNum === 1) {
+      badge(s.label || 'PROMPT PACK', cx, 118, acc);
+      const hl = stripEmoji(s.headline || post.headline || '');
+      ctx.font = fitTitle(ctx, hl, 880, 72, 40);
+      ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
+      let y = 360;
+      wrapText(ctx, hl, 880).slice(0, 3).forEach(l => { ctx.fillText(l, cx, y); y += 88; });
+      block(s.subtitle || 'Copy-paste ready. Save this.', cx, H - 148, '400 34px Arial', acc, 'center', 880, 1);
+    } else if (slideNum === 2) {
+      let y = 138;
+      y = block(s.title || 'Why These Prompts Work', cx, y, 'bold 50px Arial', '#fff', 'center', 880, 2) + 28;
+      card(58, y, W - 116, 160); block(s.context, cx, y + 48, '400 29px Arial', 'rgba(255,255,255,0.8)', 'center', W - 170, 3); y += 196;
+      block(s.tease, cx, y + 36, 'italic 500 30px Arial', acc, 'center', 880, 2);
+    } else if (slideNum >= 3 && slideNum <= 8) {
+      const pNum = s.prompt_number || (slideNum - 2);
+      ctx.font = 'bold 26px Arial'; ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.textAlign = 'left'; ctx.fillText(`Prompt ${pNum}`, 58, 76);
+      let y = 118;
+      y = block(s.prompt_name, cx, y, 'bold 44px Arial', acc, 'center', 880, 2) + 20;
+      card(48, y, W - 96, 440);
+      ctx.font = '400 22px Courier New'; ctx.fillStyle = acc; ctx.textAlign = 'left';
+      wrapText(ctx, stripEmoji(s.prompt_text || ''), W - 156).slice(0, 12).forEach((l, i) => ctx.fillText(l, 70, y + 42 + i * 34));
+      y += 464;
+      ctx.font = '400 25px Arial'; ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.textAlign = 'left';
+      ctx.fillText('Use when: ' + stripEmoji(s.use_when || ''), 58, y + 24);
+      ctx.fillStyle = '#a78bfa';
+      ctx.fillText('Output: ' + stripEmoji(s.output_description || ''), 58, y + 58);
+    } else if (slideNum === 9) {
+      block(s.title || 'The Pro Technique', cx, 128, 'bold 50px Arial', '#fff', 'center', 880, 2);
+      card(48, 196, W - 96, 154); block(s.technique, cx, 246, '500 28px Arial', '#fff', 'center', W - 150, 3);
+      let y = 376;
+      [['Before', s.before_example, '#ff8080'], ['After', s.after_example, '#00ff88']].forEach(([lbl, ex, col]) => {
+        drawGlassCard(ctx, 48, y, W - 96, 118, 14);
+        ctx.font = 'bold 24px Arial'; ctx.fillStyle = col; ctx.textAlign = 'left'; ctx.fillText(lbl + ':', 78, y + 38);
+        block(ex, 78, y + 62, '400 24px Arial', 'rgba(255,255,255,0.75)', 'left', W - 160, 2);
+        y += 138;
+      });
+    } else if (slideNum === 10) { drawSlide10(ctx, s, post); }
+
+  // ─── PATTERN C: Tutorial ─────────────────────────────────────────────────
+  } else if (pattern === 'C') {
+    if (slideNum === 1) {
+      badge(s.label || 'TUTORIAL', cx, 118, acc);
+      let y = 340;
+      ctx.font = fitTitle(ctx, stripEmoji(s.headline || post.headline || ''), 880, 70, 38);
+      ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
+      wrapText(ctx, stripEmoji(s.headline || post.headline || ''), 880).slice(0, 3).forEach(l => { ctx.fillText(l, cx, y); y += 86; });
+      block(s.subtitle || 'Copy my exact workflow', cx, H - 148, '400 33px Arial', acc, 'center', 880, 1);
+    } else if (slideNum === 2) {
+      block('What You Will Build', cx, 130, 'bold 46px Arial', '#fff', 'center', 880, 1);
+      let y = 210;
+      [['Result:', s.deliverable], ['Tools:', s.tools_needed], ['Time:', s.time_required], ['Level:', s.skill_level]].filter(([, v]) => v).forEach(([lbl, val]) => {
+        card(48, y, W - 96, 112); 
+        ctx.font = 'bold 28px Arial'; ctx.fillStyle = acc; ctx.textAlign = 'left'; ctx.fillText(lbl, 80, y + 44);
+        block(val, 200, y + 30, '400 27px Arial', '#fff', 'left', W - 250, 2); y += 132;
+      });
+    } else if (slideNum >= 3 && slideNum <= 8) {
+      const sn = s.step_number || String(slideNum - 2).padStart(2, '0');
+      ctx.font = 'bold 160px Arial'; ctx.fillStyle = acc + '18'; ctx.textAlign = 'center'; ctx.fillText(sn, cx, 280);
+      ctx.font = 'bold 90px Arial'; ctx.fillStyle = acc; ctx.textAlign = 'left'; ctx.fillText(sn, 52, 206);
+      let y = 128;
+      block(s.step_title, cx, y, 'bold 44px Arial', '#fff', 'center', 880, 2); y = 320;
+      card(48, y, W - 96, 118); block(s.action, 80, y + 36, '500 27px Arial', '#fff', 'left', W - 150, 2); y += 138;
+      card(48, y, W - 96, 100);
+      ctx.font = '400 22px Courier New'; ctx.fillStyle = acc; ctx.textAlign = 'left';
+      ctx.fillText(stripEmoji(s.exact_input || '').substring(0, 58), 76, y + 42);
+      y += 120;
+      ctx.font = '400 24px Arial'; ctx.fillStyle = '#00ff88'; ctx.textAlign = 'left';
+      ctx.fillText('Result: ' + stripEmoji(s.expected_output || ''), 58, y + 22);
+      ctx.fillStyle = '#ff8080';
+      ctx.fillText('Avoid: ' + stripEmoji(s.common_mistake || ''), 58, y + 56);
+    } else if (slideNum === 9) {
+      block('Before vs After', cx, 128, 'bold 50px Arial', '#fff', 'center', 880, 1);
+      drawGlassCard(ctx, 48, 196, W - 96, 200, 14);
+      block('BEFORE: ' + (s.before_state || ''), cx, 228, '500 28px Arial', '#ff8080', 'center', W - 140, 3);
+      drawGlassCard(ctx, 48, 420, W - 96, 200, 14);
+      block('AFTER: ' + (s.after_state || ''), cx, 452, '500 28px Arial', '#00ff88', 'center', W - 140, 3);
+      block(s.time_saved, cx, 658, 'bold 32px Arial', acc, 'center', 880, 1);
+      block(s.quality_note, cx, 714, '400 26px Arial', 'rgba(255,255,255,0.6)', 'center', 880, 2);
+    } else if (slideNum === 10) { drawSlide10(ctx, s, post); }
+
+  // ─── PATTERN D: Myth Busting ──────────────────────────────────────────────
+  } else if (pattern === 'D') {
+    if (slideNum === 1) {
+      badge(s.label || 'MYTH vs FACT', cx, 118, acc);
+      let y = 340;
+      ctx.font = fitTitle(ctx, stripEmoji(s.headline || post.headline || ''), 880, 70, 38);
+      ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
+      wrapText(ctx, stripEmoji(s.headline || post.headline || ''), 880).slice(0, 3).forEach(l => { ctx.fillText(l, cx, y); y += 86; });
+      block(s.subtitle, cx, H - 148, '400 32px Arial', acc, 'center', 880, 2);
+    } else if (slideNum >= 2 && slideNum <= 6) {
+      const mNum = slideNum - 1;
+      badge('MYTH ' + mNum, cx, 88, '#ff8080');
+      let y = 188;
+      card(48, y, W - 96, 260); block(s.myth_text, cx, y + 48, 'bold 34px Arial', '#ff8080', 'center', W - 140, 4); y += 286;
+      card(48, y, W - 96, 260); block(s.truth_text, cx, y + 44, '500 30px Arial', '#00ff88', 'center', W - 140, 4); y += 280;
+      ctx.font = '400 25px Arial'; ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.textAlign = 'center';
+      ctx.fillText(stripEmoji(s.why_it_matters || ''), cx, y + 16);
+    } else if (slideNum === 7) {
+      block(s.title || 'The Big One', cx, 128, 'bold 44px Arial', acc, 'center', 880, 2);
+      card(48, 210, W - 96, 200); block(s.myth_text, cx, 248, 'bold 30px Arial', '#ff8080', 'center', W - 140, 4);
+      card(48, 430, W - 96, 200); block(s.truth_text, cx, 468, '500 28px Arial', '#00ff88', 'center', W - 140, 4);
+      block(s.impact, cx, 666, '400 26px Arial', 'rgba(255,255,255,0.65)', 'center', 880, 2);
+    } else if (slideNum === 8) {
+      block(s.title || 'What To Do Instead', cx, 128, 'bold 50px Arial', '#fff', 'center', 880, 2);
+      let y = 250;
+      [s.action_1, s.action_2, s.action_3].filter(Boolean).forEach((a, i) => {
+        card(48, y, W - 96, 120); 
+        ctx.font = 'bold 30px Arial'; ctx.fillStyle = acc; ctx.textAlign = 'left'; ctx.fillText(`${i + 1}.`, 80, y + 50);
+        block(a, 120, y + 36, '500 27px Arial', '#fff', 'left', W - 180, 2); y += 144;
+      });
+    } else if (slideNum === 9) {
+      block(s.title || 'Reality Check', cx, 128, 'bold 50px Arial', '#fff', 'center', 880, 2);
+      card(48, 210, W - 96, 380);
+      block(s.honest_summary, cx, 260, '400 28px Arial', 'rgba(255,255,255,0.8)', 'center', W - 140, 6);
+      block(s.bottom_line, cx, 640, 'bold 30px Arial', acc, 'center', 880, 2);
+    } else if (slideNum === 10) { drawSlide10(ctx, s, post); }
+
+  // ─── PATTERN E: Comparison ────────────────────────────────────────────────
+  } else if (pattern === 'E') {
+    if (slideNum === 1) {
+      badge(s.label || 'COMPARISON', cx, 118, acc);
+      let y = 340;
+      ctx.font = fitTitle(ctx, stripEmoji(s.headline || post.headline || ''), 880, 70, 38);
+      ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
+      wrapText(ctx, stripEmoji(s.headline || post.headline || ''), 880).slice(0, 3).forEach(l => { ctx.fillText(l, cx, y); y += 86; });
+      block(s.subtitle, cx, H - 148, '400 32px Arial', acc, 'center', 880, 2);
+    } else if (slideNum === 2) {
+      const aLbl = stripEmoji(s.tool_a || 'Tool A'), bLbl = stripEmoji(s.tool_b || 'Tool B');
+      const hw = (W - 120) / 2;
+      card(48, 130, hw, 100); block(aLbl, 48 + hw / 2, 188, 'bold 36px Arial', acc, 'center', hw - 30, 1);
+      card(72 + hw, 130, hw, 100); block(bLbl, 72 + hw * 1.5, 188, 'bold 36px Arial', '#ff006e', 'center', hw - 30, 1);
+      block('Categories Tested:', cx, 274, 'bold 28px Arial', 'rgba(255,255,255,0.6)', 'center', 880, 1);
+      block(s.categories_tested, cx, 314, '400 26px Arial', '#fff', 'center', 880, 3);
+      block(s.disclaimer, cx, H - 130, '400 24px Arial', 'rgba(255,255,255,0.4)', 'center', 880, 2);
+    } else if (slideNum >= 3 && slideNum <= 7) {
+      block(s.category, cx, 118, 'bold 44px Arial', acc, 'center', 880, 2);
+      const hw = (W - 120) / 2;
+      const winner = stripEmoji(s.winner || '');
+      // Tool A card
+      const aCol = winner.toLowerCase().includes(stripEmoji(s.tool_a || '').toLowerCase().split(' ')[0]) ? '#00ff88' : 'rgba(255,255,255,0.08)';
+      drawGlassCard(ctx, 48, 190, hw, 580, 16);
+      ctx.strokeStyle = aCol; ctx.lineWidth = 2; ctx.stroke();
+      block(stripEmoji(s.tool_a || ''), 48 + hw / 2, 238, 'bold 30px Arial', '#fff', 'center', hw - 30, 1);
+      block(s.tool_a_score, 48 + hw / 2, 288, 'bold 52px Arial', aCol === '#00ff88' ? '#00ff88' : acc, 'center', hw - 30, 1);
+      block(s.tool_a_reason, 48 + hw / 2, 350, '400 24px Arial', 'rgba(255,255,255,0.75)', 'center', hw - 40, 5);
+      // Tool B card
+      const bCol = !winner.toLowerCase().includes(stripEmoji(s.tool_a || '').toLowerCase().split(' ')[0]) ? '#00ff88' : 'rgba(255,255,255,0.08)';
+      drawGlassCard(ctx, 72 + hw, 190, hw, 580, 16);
+      ctx.strokeStyle = bCol; ctx.lineWidth = 2; ctx.stroke();
+      block(stripEmoji(s.tool_b || ''), 72 + hw * 1.5, 238, 'bold 30px Arial', '#fff', 'center', hw - 30, 1);
+      block(s.tool_b_score, 72 + hw * 1.5, 288, 'bold 52px Arial', bCol === '#00ff88' ? '#00ff88' : '#ff006e', 'center', hw - 30, 1);
+      block(s.tool_b_reason, 72 + hw * 1.5, 350, '400 24px Arial', 'rgba(255,255,255,0.75)', 'center', hw - 40, 5);
+      block('Key difference: ' + stripEmoji(s.key_difference || ''), cx, 818, '500 25px Arial', acc, 'center', 880, 2);
+    } else if (slideNum === 8) {
+      block('The Verdict', cx, 128, 'bold 52px Arial', '#fff', 'center', 880, 1);
+      const hw = (W - 120) / 2;
+      card(48, 196, hw, 260); block(stripEmoji(s.tool_a || '') + ' wins for:', 48 + hw / 2, 232, 'bold 26px Arial', acc, 'center', hw - 30, 1);
+      block(s.tool_a_wins_for, 48 + hw / 2, 272, '400 24px Arial', '#fff', 'center', hw - 40, 4);
+      card(72 + hw, 196, hw, 260); block(stripEmoji(s.tool_b || '') + ' wins for:', 72 + hw * 1.5, 232, 'bold 26px Arial', '#ff006e', 'center', hw - 30, 1);
+      block(s.tool_b_wins_for, 72 + hw * 1.5, 272, '400 24px Arial', '#fff', 'center', hw - 40, 4);
+      block('Overall Winner: ' + stripEmoji(s.overall_winner || ''), cx, 500, 'bold 36px Arial', '#00ff88', 'center', 880, 1);
+      block(s.verdict_reason, cx, 550, '400 26px Arial', 'rgba(255,255,255,0.7)', 'center', 880, 3);
+    } else if (slideNum === 9) {
+      block('Who Should Use What?', cx, 128, 'bold 46px Arial', '#fff', 'center', 880, 2);
+      let y = 224;
+      [['Students', s.for_students, acc], ['Professionals', s.for_professionals, '#a78bfa'], ['Budget users', s.for_budget, '#00ff88'], ['Power users', s.for_power_users, '#ff006e']].forEach(([lbl, val, col]) => {
+        card(48, y, W - 96, 108); 
+        ctx.font = 'bold 26px Arial'; ctx.fillStyle = col; ctx.textAlign = 'left'; ctx.fillText(lbl + ':', 80, y + 42);
+        block(val, 80, y + 64, '400 25px Arial', '#fff', 'left', W - 160, 1); y += 128;
+      });
+    } else if (slideNum === 10) { drawSlide10(ctx, s, post); }
+
+  // ─── LEGACY / UNKNOWN pattern ─────────────────────────────────────────────
+  } else {
+    const drawer = SLIDE_DRAWERS[`slide_${slideNum}`];
+    if (drawer) { drawer(ctx, s, post); return; }
+    block(Object.values(s)[0] || `Slide ${slideNum}`, cx, H / 2, 'bold 40px Arial', '#fff', 'center', W - 120, 4);
+  }
+
+  // Always draw brand bar on top of everything
+  drawBrandBar(ctx, slideNum, total, themeKey);
+}
+
+
 async function renderCarousel(post) {
   console.log(`🎨 Rendering carousel for post #${post.rank}: ${post.headline}`);
   
@@ -904,19 +1218,26 @@ async function renderCarousel(post) {
     
     const canvas = createCanvas(WIDTH, HEIGHT);
     const ctx = canvas.getContext('2d');
-    
-    const drawer = SLIDE_DRAWERS[slideKey];
-    if (drawer) {
-      drawer(ctx, slideData, post);
+
+    // ─── Dispatch: new pattern-aware renderer OR legacy fallback ─────────────
+    const isNewPattern = ['A', 'B', 'C', 'D', 'E'].includes(post.pattern);
+    if (isNewPattern) {
+      drawPatternSlide(ctx, slideNum, post);
     } else {
-      drawBackground(ctx, (slideNum % 5) || 5);
-      const theme = SLIDE_THEMES[(slideNum % 10) || 10];
-      ctx.textAlign = 'center';
-      ctx.fillStyle = COLORS.text_primary;
-      ctx.font = '700 36px Arial';
-      ctx.fillText(stripEmoji(Object.values(slideData)[0] || `Slide ${slideNum}`), WIDTH/2, HEIGHT/2);
-      drawBrandBar(ctx, slideNum, totalSlides, theme);
+      const drawer = SLIDE_DRAWERS[slideKey];
+      if (drawer) {
+        drawer(ctx, slideData, post);
+      } else {
+        drawBackground(ctx, (slideNum % 5) || 5);
+        const theme = SLIDE_THEMES[(slideNum % 10) || 10];
+        ctx.textAlign = 'center';
+        ctx.fillStyle = COLORS.text_primary;
+        ctx.font = '700 36px Arial';
+        ctx.fillText(stripEmoji(Object.values(slideData)[0] || `Slide ${slideNum}`), WIDTH / 2, HEIGHT / 2);
+        drawBrandBar(ctx, slideNum, totalSlides, theme);
+      }
     }
+
     
     const filename = `slide_${slideNum}.png`;
     const filepath = path.join(postDir, filename);
@@ -937,23 +1258,26 @@ async function renderCarousel(post) {
 }
 
 
-async function renderAllCarousels(contentData) {
-  console.log('🎨 Starting carousel rendering for all posts...');
-  
+async function renderAllCarousels(contentData, options = {}) {
+  const { theme: globalTheme = 'cyber_dark' } = options;
+  console.log(`🎨 Starting carousel rendering — theme: ${globalTheme}...`);
+
   const results = [];
-  
+
   for (const post of contentData.posts) {
-    const { imagePaths, imageBase64s } = await renderCarousel(post);
+    // If post has its own theme, use it; else use global theme from picker
+    const effectiveTheme = post.theme || globalTheme;
+    const { imagePaths, imageBase64s } = await renderCarousel(post, effectiveTheme);
     results.push({
       post_id: post.post_id,
       rank: post.rank,
       headline: post.headline,
       image_paths: imagePaths,
-      image_base64s: imageBase64s, // ← persist in memory, survives disk wipes
+      image_base64s: imageBase64s,
       rendered_at: new Date().toISOString()
     });
   }
-  
+
   console.log(`✅ All carousels rendered! ${results.length} posts complete`);
   return results;
 }
