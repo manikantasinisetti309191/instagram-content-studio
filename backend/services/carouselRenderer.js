@@ -904,8 +904,10 @@ function drawPatternSlide(ctx, slideNum, post) {
     ctx.fillStyle = color;
     ctx.textAlign = align || 'center';
     const lines = wrap(text, maxW || WIDTH - 120, maxLines || 5);
-    lines.forEach((line, i) => ctx.fillText(line, x, y + i * (parseInt(font) * 1.4)));
-    return y + lines.length * (parseInt(font) * 1.4);
+    const fsMatch = font.match(/(\d+)px/);
+    const fs = fsMatch ? parseInt(fsMatch[1]) : 24;
+    lines.forEach((line, i) => ctx.fillText(line, x, y + i * (fs * 1.4)));
+    return y + lines.length * (fs * 1.4);
   }
 
   // Helper: draw a rounded pill badge
@@ -951,7 +953,8 @@ function drawPatternSlide(ctx, slideNum, post) {
     ctx.fillStyle = color;
     ctx.textAlign = align || 'left';
     const lines = wrap(text, maxW || cardW - 40, maxLines || 99);
-    const fs = parseInt(font);
+    const fsMatch = font.match(/(\d+)px/);
+    const fs = fsMatch ? parseInt(fsMatch[1]) : 24;
     const lh = fs * 1.35;
     lines.forEach((line, i) => ctx.fillText(line, textX, textY + i * lh));
     ctx.restore();
