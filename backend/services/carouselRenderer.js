@@ -991,11 +991,13 @@ function drawPatternSlide(ctx, slideNum, post) {
       let y = 250;
       [s.step_1, s.step_2, s.step_3].filter(Boolean).forEach((step, i) => {
         card(48, y, W - 96, 118);
-        ctx.font = 'bold 30px Arial'; ctx.fillStyle = acc; ctx.textAlign = 'left'; ctx.fillText(`${i + 1}.`, 80, y + 50);
-        block(step, 122, y + 38, '500 27px Arial', '#fff', 'left', W - 190, 2); y += 138;
+        ctx.font = 'bold 30px Arial'; ctx.fillStyle = acc; ctx.textAlign = 'left'; 
+        ctx.fillText(`${i + 1}.`, 80, y + 38); // Aligned baseline with the first line of text
+        block(step, 122, y + 38, '500 27px Arial', '#fff', 'left', W - 190, 2); 
+        y += 138;
       });
-      card(cx - 200, y + 14, 400, 66);
-      block(s.time_saved, cx, y + 50, 'bold 26px Arial', '#00ff88', 'center', 380, 1);
+      card(cx - 200, y + 14, 400, 80);
+      block(s.time_saved, cx, y + 46, 'bold 24px Arial', '#00ff88', 'center', 380, 2);
     } else if (slideNum === 6) {
       badge(s.slide_label || 'COPY THIS PROMPT', cx, 80, acc);
       block(s.prompt_name, cx, 182, 'bold 38px Arial', '#fff', 'center', 880, 2);
