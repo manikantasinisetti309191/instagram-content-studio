@@ -1184,14 +1184,11 @@ function drawPatternSlide(ctx, slideNum, post) {
       let y = 128;
       block(s.step_title, cx, y, 'bold 44px Arial', '#fff', 'center', 880, 2); y = 320;
       card(48, y, W - 96, 118); block(s.action, 80, y + 36, '500 27px Arial', '#fff', 'left', W - 150, 2); y += 138;
-      card(48, y, W - 96, 100);
-      ctx.font = '400 22px Courier New'; ctx.fillStyle = acc; ctx.textAlign = 'left';
-      ctx.fillText(stripEmoji(s.exact_input || '').substring(0, 58), 76, y + 42);
-      y += 120;
-      ctx.font = '400 24px Arial'; ctx.fillStyle = '#00ff88'; ctx.textAlign = 'left';
-      ctx.fillText('Result: ' + stripEmoji(s.expected_output || ''), 58, y + 22);
-      ctx.fillStyle = '#ff8080';
-      ctx.fillText('Avoid: ' + stripEmoji(s.common_mistake || ''), 58, y + 56);
+      card(48, y, W - 96, 140);
+      block(stripEmoji(s.exact_input || ''), 76, y + 36, '400 22px Courier New', acc, 'left', W - 140, 3);
+      y += 160;
+      y = block('Result: ' + stripEmoji(s.expected_output || ''), 58, y + 20, '400 24px Arial', '#00ff88', 'left', W - 120, 2) + 16;
+      block('Avoid: ' + stripEmoji(s.common_mistake || ''), 58, y, '400 24px Arial', '#ff8080', 'left', W - 120, 2);
     } else if (slideNum === 9) {
       block('Before vs After', cx, 128, 'bold 50px Arial', '#fff', 'center', 880, 1);
       drawGlassCard(ctx, 48, 196, W - 96, 200, 14);
