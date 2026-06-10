@@ -976,36 +976,60 @@ function drawPatternSlide(ctx, slideNum, post) {
     } else if (slideNum === 7) {
       block(s.title || 'Who Is This For?', cx, 130, 'bold 50px Arial', '#fff', 'center', 880, 2);
       const segs = [['Students', s.for_students], ['Employees', s.for_employees], ['Creators', s.for_creators], ['Business', s.for_business]];
-      const cw = (W - 120) / 2;
+      const cw = (W - 144) / 2; // card width with gap
       segs.forEach(([label, val], i) => {
         const col = i % 2, row = Math.floor(i / 2);
-        const cx2 = 48 + col * (cw + 24) + cw / 2, cy = 210 + row * 300;
-        card(48 + col * (cw + 24), cy, cw, 280);
-        block(label, cx2, cy + 44, 'bold 26px Arial', acc, 'center', cw - 20, 1);
-        block(val, cx2, cy + 86, '400 23px Arial', 'rgba(255,255,255,0.75)', 'center', cw - 30, 5);
+        const cardX = 48 + col * (cw + 24);
+        const cardY = 218 + row * 296;
+        const cardH = 270;
+        const textCx = cardX + cw / 2;
+        card(cardX, cardY, cw, cardH);
+        block(label, textCx, cardY + 44, 'bold 24px Arial', acc, 'center', cw - 24, 1);
+        // Auto-shrink text: try 21px first (3 lines), then 18px (4 lines) if too long
+        const valText = stripEmoji(val || '');
+        ctx.font = '400 21px Arial';
+        const lines21 = wrapText(ctx, valText, cw - 32);
+        const fontSize = lines21.length <= 4 ? 21 : 18;
+        const maxL = lines21.length <= 4 ? 4 : 5;
+        block(val, textCx, cardY + 84, `400 ${fontSize}px Arial`, 'rgba(255,255,255,0.80)', 'center', cw - 32, maxL);
       });
     } else if (slideNum === 8) {
       block(s.title || 'Start in 5 Minutes', cx, 128, 'bold 50px Arial', '#fff', 'center', 880, 2);
       let y = 210;
       [s.step_1, s.step_2, s.step_3].filter(Boolean).forEach((step, i) => {
-        card(48, y, W - 96, 126);
-        ctx.font = 'bold 34px Arial'; ctx.fillStyle = acc; ctx.textAlign = 'left'; ctx.fillText(`${i + 1}`, 82, y + 54);
-        block(step, 124, y + 38, '500 28px Arial', '#fff', 'left', W - 190, 2); y += 150;
+        const cardH = 152; // taller card = enough room for 2 wrapped lines
+        card(48, y, W - 96, cardH);
+        ctx.font = 'bold 34px Arial'; ctx.fillStyle = acc; ctx.textAlign = 'left'; ctx.fillText(`${i + 1}`, 82, y + 60);
+        // Auto-shrink: try 26px, fall back to 23px for very long steps
+        const stepText = stripEmoji(step || '');
+        ctx.font = '500 26px Arial';
+        const lines26 = wrapText(ctx, stepText, W - 192);
+        const fs = lines26.length <= 2 ? 26 : 23;
+        block(step, 124, y + 38, `500 ${fs}px Arial`, '#fff', 'left', W - 192, 2);
+        y += 168;
       });
-      block(s.closing_line || "That's it. You're in.", cx, y + 36, 'bold 32px Arial', '#00ff88', 'center', 880, 2);
+      block(s.closing_line || "That's it. You're in.", cx, y + 24, 'bold 30px Arial', '#00ff88', 'center', 880, 2);
     } else if (slideNum === 9) {
       block(s.title || 'The Honest Catch', cx, 128, 'bold 50px Arial', '#fff', 'center', 880, 2);
       let y = 220;
       [s.limitation_1, s.limitation_2].filter(Boolean).forEach(lim => {
-        drawGlassCard(ctx, 48, y, W - 96, 126, 14);
-        ctx.font = 'bold 30px Arial'; ctx.fillStyle = '#ff8080'; ctx.textAlign = 'left'; ctx.fillText('X', 80, y + 54);
-        block(lim, 122, y + 38, '500 27px Arial', 'rgba(255,255,255,0.8)', 'left', W - 190, 2); y += 150;
+        const cardH = 158; // taller = enough for 2 lines at 27px
+        drawGlassCard(ctx, 48, y, W - 96, cardH, 14);
+        ctx.font = 'bold 30px Arial'; ctx.fillStyle = '#ff8080'; ctx.textAlign = 'left'; ctx.fillText('X', 80, y + 60);
+        // Auto-shrink for long limitation text
+        const limText = stripEmoji(lim || '');
+        ctx.font = '500 26px Arial';
+        const limLines = wrapText(ctx, limText, W - 196);
+        const limFs = limLines.length <= 2 ? 26 : 22;
+        block(lim, 122, y + 40, `500 ${limFs}px Arial`, 'rgba(255,255,255,0.85)', 'left', W - 196, 2);
+        y += 178;
       });
-      drawGlassCard(ctx, 48, y + 16, W - 96, 152, 14);
-      block('Still worth it:', cx, y + 56, 'bold 28px Arial', '#00ff88', 'center', 880, 1);
-      block(s.still_worth_it, cx, y + 98, '500 26px Arial', '#fff', 'center', W - 140, 2);
+      drawGlassCard(ctx, 48, y + 10, W - 96, 158, 14);
+      block('Still worth it:', cx, y + 50, 'bold 28px Arial', '#00ff88', 'center', 880, 1);
+      block(s.still_worth_it, cx, y + 92, '500 26px Arial', '#fff', 'center', W - 144, 2);
     } else if (slideNum === 10) {
-      drawSlide10(ctx, s, post);
+      // Pass verdict→summary so drawSlide10 can render Pattern A's verdict field
+      drawSlide10(ctx, { ...s, summary: s.verdict || s.summary || s.comment_question || '' }, post);
     }
 
   // ─── PATTERN B: Prompt Playbook ──────────────────────────────────────────
@@ -1032,10 +1056,8 @@ function drawPatternSlide(ctx, slideNum, post) {
       ctx.font = '400 22px Courier New'; ctx.fillStyle = acc; ctx.textAlign = 'left';
       wrapText(ctx, stripEmoji(s.prompt_text || ''), W - 156).slice(0, 12).forEach((l, i) => ctx.fillText(l, 70, y + 42 + i * 34));
       y += 464;
-      ctx.font = '400 25px Arial'; ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.textAlign = 'left';
-      ctx.fillText('Use when: ' + stripEmoji(s.use_when || ''), 58, y + 24);
-      ctx.fillStyle = '#a78bfa';
-      ctx.fillText('Output: ' + stripEmoji(s.output_description || ''), 58, y + 58);
+      block('Use when: ' + stripEmoji(s.use_when || ''), 58, y + 28, '400 24px Arial', 'rgba(255,255,255,0.45)', 'left', W - 120, 1);
+      block('Output: ' + stripEmoji(s.output_description || ''), 58, y + 58, '400 24px Arial', '#a78bfa', 'left', W - 120, 1);
     } else if (slideNum === 9) {
       block(s.title || 'The Pro Technique', cx, 128, 'bold 50px Arial', '#fff', 'center', 880, 2);
       card(48, 196, W - 96, 154); block(s.technique, cx, 246, '500 28px Arial', '#fff', 'center', W - 150, 3);
@@ -1046,7 +1068,7 @@ function drawPatternSlide(ctx, slideNum, post) {
         block(ex, 78, y + 62, '400 24px Arial', 'rgba(255,255,255,0.75)', 'left', W - 160, 2);
         y += 138;
       });
-    } else if (slideNum === 10) { drawSlide10(ctx, s, post); }
+    } else if (slideNum === 10) { drawSlide10(ctx, { ...s, summary: s.verdict || s.summary || '' }, post); }
 
   // ─── PATTERN C: Tutorial ─────────────────────────────────────────────────
   } else if (pattern === 'C') {
@@ -1088,7 +1110,7 @@ function drawPatternSlide(ctx, slideNum, post) {
       block('AFTER: ' + (s.after_state || ''), cx, 452, '500 28px Arial', '#00ff88', 'center', W - 140, 3);
       block(s.time_saved, cx, 658, 'bold 32px Arial', acc, 'center', 880, 1);
       block(s.quality_note, cx, 714, '400 26px Arial', 'rgba(255,255,255,0.6)', 'center', 880, 2);
-    } else if (slideNum === 10) { drawSlide10(ctx, s, post); }
+    } else if (slideNum === 10) { drawSlide10(ctx, { ...s, summary: s.verdict || s.summary || '' }, post); }
 
   // ─── PATTERN D: Myth Busting ──────────────────────────────────────────────
   } else if (pattern === 'D') {
@@ -1125,7 +1147,7 @@ function drawPatternSlide(ctx, slideNum, post) {
       card(48, 210, W - 96, 380);
       block(s.honest_summary, cx, 260, '400 28px Arial', 'rgba(255,255,255,0.8)', 'center', W - 140, 6);
       block(s.bottom_line, cx, 640, 'bold 30px Arial', acc, 'center', 880, 2);
-    } else if (slideNum === 10) { drawSlide10(ctx, s, post); }
+    } else if (slideNum === 10) { drawSlide10(ctx, { ...s, summary: s.verdict || s.summary || '' }, post); }
 
   // ─── PATTERN E: Comparison ────────────────────────────────────────────────
   } else if (pattern === 'E') {
@@ -1180,7 +1202,7 @@ function drawPatternSlide(ctx, slideNum, post) {
         ctx.font = 'bold 26px Arial'; ctx.fillStyle = col; ctx.textAlign = 'left'; ctx.fillText(lbl + ':', 80, y + 42);
         block(val, 80, y + 64, '400 25px Arial', '#fff', 'left', W - 160, 1); y += 128;
       });
-    } else if (slideNum === 10) { drawSlide10(ctx, s, post); }
+    } else if (slideNum === 10) { drawSlide10(ctx, { ...s, summary: s.verdict || s.summary || '' }, post); }
 
   // ─── LEGACY / UNKNOWN pattern ─────────────────────────────────────────────
   } else {
