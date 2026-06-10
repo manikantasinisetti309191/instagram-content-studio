@@ -9,12 +9,14 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Model chain: ONLY models confirmed working June 2025
-// gemini-2.5-flash = fast, free tier, best for high-volume
-// gemini-2.5-pro   = highest quality, use as backup
+// Model chain: prioritize high-quota free tier models
+// gemini-1.5-flash:    1500 req/day free - PRIMARY workhorse
+// gemini-2.5-flash:    500 req/day free  - good quality backup
+// gemini-1.5-flash-8b: 1500 req/day free - lightweight emergency fallback
 const MODEL_CHAIN = [
+  'gemini-1.5-flash',
   'gemini-2.5-flash',
-  'gemini-2.5-pro'
+  'gemini-1.5-flash-8b'
 ];
 
 const GENERATION_CONFIGS = {
