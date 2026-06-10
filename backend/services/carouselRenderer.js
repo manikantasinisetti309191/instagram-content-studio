@@ -965,15 +965,15 @@ function drawPatternSlide(ctx, slideNum, post) {
   // ─── PATTERN A: Tool Spotlight ───────────────────────────────────────────
   if (pattern === 'A') {
     if (slideNum === 1) {
-      badge(s.label || 'TOOL DROP', cx, 110, acc);
+      badge(s.label || 'TOOL DROP', cx, 80, acc);
       const name = stripEmoji(s.tool_name || post.headline || '');
-      ctx.font = fitTitle(ctx, name, 880, 96, 48);
+      ctx.font = 'bold 58px Arial';
       ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'center';
       const nameLines = wrapText(ctx, name, 880);
-      let ny = nameLines.length > 1 ? 370 : 440;
-      nameLines.slice(0, 3).forEach((l, i) => ctx.fillText(l, cx, ny + i * 108));
-      ny += nameLines.length * 108;
+      let ny = nameLines.length > 1 ? 340 : 410;
+      nameLines.slice(0, 3).forEach((l, i) => ctx.fillText(l, cx, ny + i * 74));
+      ny += nameLines.length * 74;
       block(s.tagline, cx, ny + 20, '400 40px Arial', acc, 'center', 880, 2);
       block(s.subtitle, cx, H - 140, '300 30px Arial', 'rgba(255,255,255,0.55)', 'center', 880, 1);
     } else if (slideNum === 2) {
@@ -1115,13 +1115,15 @@ function drawPatternSlide(ctx, slideNum, post) {
   // ─── PATTERN B: Prompt Playbook ──────────────────────────────────────────
   } else if (pattern === 'B') {
     if (slideNum === 1) {
-      badge(s.label || 'PROMPT PACK', cx, 118, acc);
+      badge(s.label || 'PROMPT PACK', cx, 80, acc);
       const hl = stripEmoji(s.headline || post.headline || '');
-      ctx.font = fitTitle(ctx, hl, 880, 72, 40);
+      ctx.font = 'bold 58px Arial';
       ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
-      let y = 360;
-      wrapText(ctx, hl, 880).slice(0, 3).forEach(l => { ctx.fillText(l, cx, y); y += 88; });
-      block(s.subtitle || 'Copy-paste ready. Save this.', cx, H - 148, '400 34px Arial', acc, 'center', 880, 1);
+      const hlLines = wrapText(ctx, hl, 900).slice(0, 3);
+      const hlLH = 74;
+      const hlY = Math.round((HEIGHT - hlLines.length * hlLH) / 2) - 30;
+      hlLines.forEach((l, i) => ctx.fillText(l, cx, hlY + i * hlLH));
+      block(s.subtitle || 'Copy-paste ready. Save this.', cx, HEIGHT - 140, '400 34px Arial', acc, 'center', 880, 1);
     } else if (slideNum === 2) {
       let y = 138;
       y = block(s.title || 'Why These Prompts Work', cx, y, 'bold 50px Arial', '#fff', 'center', 880, 2) + 28;
@@ -1153,12 +1155,15 @@ function drawPatternSlide(ctx, slideNum, post) {
   // ─── PATTERN C: Tutorial ─────────────────────────────────────────────────
   } else if (pattern === 'C') {
     if (slideNum === 1) {
-      badge(s.label || 'TUTORIAL', cx, 118, acc);
-      let y = 340;
-      ctx.font = fitTitle(ctx, stripEmoji(s.headline || post.headline || ''), 880, 70, 38);
+      badge(s.label || 'TUTORIAL', cx, 80, acc);
+      const hl = stripEmoji(s.headline || post.headline || '');
+      ctx.font = 'bold 58px Arial';
       ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
-      wrapText(ctx, stripEmoji(s.headline || post.headline || ''), 880).slice(0, 3).forEach(l => { ctx.fillText(l, cx, y); y += 86; });
-      block(s.subtitle || 'Copy my exact workflow', cx, H - 148, '400 33px Arial', acc, 'center', 880, 1);
+      const hlLines = wrapText(ctx, hl, 900).slice(0, 3);
+      const hlLH = 74;
+      const hlY = Math.round((HEIGHT - hlLines.length * hlLH) / 2) - 30;
+      hlLines.forEach((l, i) => ctx.fillText(l, cx, hlY + i * hlLH));
+      block(s.subtitle || 'Copy my exact workflow', cx, HEIGHT - 140, '400 33px Arial', acc, 'center', 880, 1);
     } else if (slideNum === 2) {
       block('What You Will Build', cx, 130, 'bold 46px Arial', '#fff', 'center', 880, 1);
       let y = 210;
@@ -1195,49 +1200,95 @@ function drawPatternSlide(ctx, slideNum, post) {
   // ─── PATTERN D: Myth Busting ──────────────────────────────────────────────
   } else if (pattern === 'D') {
     if (slideNum === 1) {
-      badge(s.label || 'MYTH vs FACT', cx, 118, acc);
-      let y = 340;
-      ctx.font = fitTitle(ctx, stripEmoji(s.headline || post.headline || ''), 880, 70, 38);
+      // Slide 1: Simple centered headline, no fitTitle bug
+      badge(s.label || 'MYTH vs FACT', cx, 80, acc);
+      const hl1 = stripEmoji(s.headline || post.headline || '');
+      ctx.font = 'bold 58px Arial';
       ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
-      wrapText(ctx, stripEmoji(s.headline || post.headline || ''), 880).slice(0, 3).forEach(l => { ctx.fillText(l, cx, y); y += 86; });
-      block(s.subtitle, cx, H - 148, '400 32px Arial', acc, 'center', 880, 2);
+      const hl1Lines = wrapText(ctx, hl1, 900).slice(0, 3);
+      const hl1LH = 74;
+      const hl1Y = Math.round((HEIGHT - hl1Lines.length * hl1LH) / 2) - 30;
+      hl1Lines.forEach((l, i) => ctx.fillText(l, cx, hl1Y + i * hl1LH));
+      block(s.subtitle || 'Stop believing these — your career depends on it', cx, HEIGHT - 140, '400 32px Arial', acc, 'center', 880, 2);
+
     } else if (slideNum >= 2 && slideNum <= 6) {
+      // Slides 2-6: MYTH vs FACT with clippedBlock inside each card
       const mNum = slideNum - 1;
-      badge('MYTH ' + mNum, cx, 88, '#ff8080');
-      let y = 188;
-      card(48, y, W - 96, 260); block(s.myth_text, cx, y + 48, 'bold 34px Arial', '#ff8080', 'center', W - 140, 4); y += 286;
-      card(48, y, W - 96, 260); block(s.truth_text, cx, y + 44, '500 30px Arial', '#00ff88', 'center', W - 140, 4); y += 280;
-      ctx.font = '400 25px Arial'; ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.textAlign = 'center';
-      ctx.fillText(stripEmoji(s.why_it_matters || ''), cx, y + 16);
+      badge('MYTH ' + mNum, cx, 60, '#ff8080');
+
+      // MYTH card
+      const mythY = 140, mythH = 258;
+      drawGlassCard(ctx, 48, mythY, W - 96, mythH, 14);
+      ctx.strokeStyle = '#ff808040'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.font = 'bold 18px Arial'; ctx.fillStyle = '#ff8080'; ctx.textAlign = 'left';
+      ctx.fillText('✗ MYTH', 74, mythY + 26);
+      clippedBlock(s.myth_text, 48, mythY, W - 96, mythH, 74, mythY + 52, 'bold 27px Arial', '#ff8080', 'left', W - 158, 99);
+
+      // FACT card
+      const factY = mythY + mythH + 16, factH = 268;
+      drawGlassCard(ctx, 48, factY, W - 96, factH, 14);
+      ctx.strokeStyle = '#00ff8840'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.font = 'bold 18px Arial'; ctx.fillStyle = '#00ff88'; ctx.textAlign = 'left';
+      ctx.fillText('✓ FACT', 74, factY + 26);
+      clippedBlock(s.truth_text, 48, factY, W - 96, factH, 74, factY + 52, '500 25px Arial', '#00ff88', 'left', W - 158, 99);
+
+      // why_it_matters below cards if space
+      const wmY = factY + factH + 14;
+      if (wmY + 50 < HEIGHT - 70) {
+        block(s.why_it_matters, cx, wmY + 12, '400 23px Arial', 'rgba(255,255,255,0.55)', 'center', W - 120, 2);
+      }
     } else if (slideNum === 7) {
-      block(s.title || 'The Big One', cx, 128, 'bold 44px Arial', acc, 'center', 880, 2);
-      card(48, 210, W - 96, 200); block(s.myth_text, cx, 248, 'bold 30px Arial', '#ff8080', 'center', W - 140, 4);
-      card(48, 430, W - 96, 200); block(s.truth_text, cx, 468, '500 28px Arial', '#00ff88', 'center', W - 140, 4);
-      block(s.impact, cx, 666, '400 26px Arial', 'rgba(255,255,255,0.65)', 'center', 880, 2);
+      block(s.title || 'The Biggest One', cx, 80, 'bold 44px Arial', acc, 'center', 880, 2);
+      const m7H = 206;
+      drawGlassCard(ctx, 48, 158, W - 96, m7H, 14);
+      ctx.strokeStyle = '#ff808040'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.font = 'bold 18px Arial'; ctx.fillStyle = '#ff8080'; ctx.textAlign = 'left';
+      ctx.fillText('✗ MYTH', 74, 182);
+      clippedBlock(s.myth_text, 48, 158, W - 96, m7H, 74, 208, 'bold 25px Arial', '#ff8080', 'left', W - 158, 99);
+
+      const f7H = 206;
+      drawGlassCard(ctx, 48, 380, W - 96, f7H, 14);
+      ctx.strokeStyle = '#00ff8840'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.font = 'bold 18px Arial'; ctx.fillStyle = '#00ff88'; ctx.textAlign = 'left';
+      ctx.fillText('✓ FACT', 74, 404);
+      clippedBlock(s.truth_text, 48, 380, W - 96, f7H, 74, 430, '500 24px Arial', '#00ff88', 'left', W - 158, 99);
+
+      block(s.impact, cx, 606, '400 25px Arial', 'rgba(255,255,255,0.65)', 'center', 880, 3);
+
     } else if (slideNum === 8) {
-      block(s.title || 'What To Do Instead', cx, 128, 'bold 50px Arial', '#fff', 'center', 880, 2);
-      let y = 250;
-      [s.action_1, s.action_2, s.action_3].filter(Boolean).forEach((a, i) => {
-        card(48, y, W - 96, 120); 
-        ctx.font = 'bold 30px Arial'; ctx.fillStyle = acc; ctx.textAlign = 'left'; ctx.fillText(`${i + 1}.`, 80, y + 50);
-        block(a, 120, y + 36, '500 27px Arial', '#fff', 'left', W - 180, 2); y += 144;
+      block(s.title || 'What To Do Instead', cx, 80, 'bold 48px Arial', '#fff', 'center', 880, 2);
+      const acts = [s.action_1, s.action_2, s.action_3].filter(Boolean);
+      const aCh = Math.min(180, Math.floor((900 - 180 - (acts.length - 1) * 16) / acts.length));
+      let ay = 178;
+      acts.forEach((a, i) => {
+        card(48, ay, W - 96, aCh);
+        ctx.font = 'bold 32px Arial'; ctx.fillStyle = acc; ctx.textAlign = 'left';
+        ctx.fillText(`${i + 1}.`, 78, ay + aCh / 2 + 12);
+        clippedBlock(a, 48, ay, W - 96, aCh, 120, ay + 36, '500 26px Arial', '#fff', 'left', W - 180, 99);
+        ay += aCh + 16;
       });
+
     } else if (slideNum === 9) {
-      block(s.title || 'Reality Check', cx, 128, 'bold 50px Arial', '#fff', 'center', 880, 2);
-      card(48, 210, W - 96, 380);
-      block(s.honest_summary, cx, 260, '400 28px Arial', 'rgba(255,255,255,0.8)', 'center', W - 140, 6);
-      block(s.bottom_line, cx, 640, 'bold 30px Arial', acc, 'center', 880, 2);
+      block(s.title || 'Reality Check', cx, 80, 'bold 48px Arial', '#fff', 'center', 880, 2);
+      const s9CardH = 430;
+      card(48, 156, W - 96, s9CardH);
+      clippedBlock(s.honest_summary, 48, 156, W - 96, s9CardH, 74, 196, '400 26px Arial', 'rgba(255,255,255,0.85)', 'left', W - 148, 99);
+      block(s.bottom_line, cx, 624, 'bold 30px Arial', acc, 'center', 880, 2);
+
     } else if (slideNum === 10) { drawSlide10(ctx, { ...s, summary: s.verdict || s.summary || '' }, post); }
 
   // ─── PATTERN E: Comparison ────────────────────────────────────────────────
   } else if (pattern === 'E') {
     if (slideNum === 1) {
-      badge(s.label || 'COMPARISON', cx, 118, acc);
-      let y = 340;
-      ctx.font = fitTitle(ctx, stripEmoji(s.headline || post.headline || ''), 880, 70, 38);
+      badge(s.label || 'COMPARISON', cx, 80, acc);
+      const hl = stripEmoji(s.headline || post.headline || '');
+      ctx.font = 'bold 58px Arial';
       ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
-      wrapText(ctx, stripEmoji(s.headline || post.headline || ''), 880).slice(0, 3).forEach(l => { ctx.fillText(l, cx, y); y += 86; });
-      block(s.subtitle, cx, H - 148, '400 32px Arial', acc, 'center', 880, 2);
+      const hlLines = wrapText(ctx, hl, 900).slice(0, 3);
+      const hlLH = 74;
+      const hlY = Math.round((HEIGHT - hlLines.length * hlLH) / 2) - 30;
+      hlLines.forEach((l, i) => ctx.fillText(l, cx, hlY + i * hlLH));
+      block(s.subtitle, cx, HEIGHT - 140, '400 32px Arial', acc, 'center', 880, 2);
     } else if (slideNum === 2) {
       const aLbl = stripEmoji(s.tool_a || 'Tool A'), bLbl = stripEmoji(s.tool_b || 'Tool B');
       const hw = (W - 120) / 2;
