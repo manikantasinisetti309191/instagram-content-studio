@@ -1173,9 +1173,10 @@ function drawPatternSlide(ctx, slideNum, post) {
       block('What You Will Build', cx, 130, 'bold 46px Arial', '#fff', 'center', 880, 1);
       let y = 210;
       [['Result:', s.deliverable], ['Tools:', s.tools_needed], ['Time:', s.time_required], ['Level:', s.skill_level]].filter(([, v]) => v).forEach(([lbl, val]) => {
-        card(48, y, W - 96, 112); 
-        ctx.font = 'bold 28px Arial'; ctx.fillStyle = acc; ctx.textAlign = 'left'; ctx.fillText(lbl, 80, y + 44);
-        block(val, 200, y + 30, '400 27px Arial', '#fff', 'left', W - 250, 2); y += 132;
+        card(48, y, W - 96, 118); 
+        // Label stacked on top, value below — clean alignment
+        ctx.font = 'bold 22px Arial'; ctx.fillStyle = acc; ctx.textAlign = 'left'; ctx.fillText(lbl, 80, y + 30);
+        block(val, 80, y + 50, '400 26px Arial', '#fff', 'left', W - 160, 2); y += 138;
       });
     } else if (slideNum >= 3 && slideNum <= 8) {
       const sn = s.step_number || String(slideNum - 2).padStart(2, '0');
@@ -1218,21 +1219,21 @@ function drawPatternSlide(ctx, slideNum, post) {
       const mNum = slideNum - 1;
       badge('MYTH ' + mNum, cx, 60, '#ff8080');
 
-      // MYTH card
-      const mythY = 140, mythH = 258;
+      // MYTH card — increase gap between MYTH label and myth text
+      const mythY = 140, mythH = 268;
       drawGlassCard(ctx, 48, mythY, W - 96, mythH, 14);
       ctx.strokeStyle = '#ff808040'; ctx.lineWidth = 1.5; ctx.stroke();
-      ctx.font = 'bold 18px Arial'; ctx.fillStyle = '#ff8080'; ctx.textAlign = 'left';
-      ctx.fillText('✗ MYTH', 74, mythY + 26);
-      clippedBlock(s.myth_text, 48, mythY, W - 96, mythH, 74, mythY + 52, 'bold 27px Arial', '#ff8080', 'left', W - 158, 99);
+      ctx.font = 'bold 16px Arial'; ctx.fillStyle = '#ff8080'; ctx.textAlign = 'left';
+      ctx.fillText('✗  MYTH', 74, mythY + 28);
+      clippedBlock(s.myth_text, 48, mythY, W - 96, mythH, 74, mythY + 62, 'bold 26px Arial', '#ff8080', 'left', W - 158, 99);
 
       // FACT card
-      const factY = mythY + mythH + 16, factH = 268;
+      const factY = mythY + mythH + 14, factH = 268;
       drawGlassCard(ctx, 48, factY, W - 96, factH, 14);
       ctx.strokeStyle = '#00ff8840'; ctx.lineWidth = 1.5; ctx.stroke();
-      ctx.font = 'bold 18px Arial'; ctx.fillStyle = '#00ff88'; ctx.textAlign = 'left';
-      ctx.fillText('✓ FACT', 74, factY + 26);
-      clippedBlock(s.truth_text, 48, factY, W - 96, factH, 74, factY + 52, '500 25px Arial', '#00ff88', 'left', W - 158, 99);
+      ctx.font = 'bold 16px Arial'; ctx.fillStyle = '#00ff88'; ctx.textAlign = 'left';
+      ctx.fillText('✓  FACT', 74, factY + 28);
+      clippedBlock(s.truth_text, 48, factY, W - 96, factH, 74, factY + 62, '500 24px Arial', '#00ff88', 'left', W - 158, 99);
 
       // why_it_matters below cards if space
       const wmY = factY + factH + 14;
@@ -1241,19 +1242,19 @@ function drawPatternSlide(ctx, slideNum, post) {
       }
     } else if (slideNum === 7) {
       block(s.title || 'The Biggest One', cx, 80, 'bold 44px Arial', acc, 'center', 880, 2);
-      const m7H = 206;
+      const m7H = 210;
       drawGlassCard(ctx, 48, 158, W - 96, m7H, 14);
       ctx.strokeStyle = '#ff808040'; ctx.lineWidth = 1.5; ctx.stroke();
-      ctx.font = 'bold 18px Arial'; ctx.fillStyle = '#ff8080'; ctx.textAlign = 'left';
-      ctx.fillText('✗ MYTH', 74, 182);
-      clippedBlock(s.myth_text, 48, 158, W - 96, m7H, 74, 208, 'bold 25px Arial', '#ff8080', 'left', W - 158, 99);
+      ctx.font = 'bold 16px Arial'; ctx.fillStyle = '#ff8080'; ctx.textAlign = 'left';
+      ctx.fillText('✗  MYTH', 74, 184);
+      clippedBlock(s.myth_text, 48, 158, W - 96, m7H, 74, 216, 'bold 24px Arial', '#ff8080', 'left', W - 158, 99);
 
-      const f7H = 206;
-      drawGlassCard(ctx, 48, 380, W - 96, f7H, 14);
+      const f7H = 210;
+      drawGlassCard(ctx, 48, 382, W - 96, f7H, 14);
       ctx.strokeStyle = '#00ff8840'; ctx.lineWidth = 1.5; ctx.stroke();
-      ctx.font = 'bold 18px Arial'; ctx.fillStyle = '#00ff88'; ctx.textAlign = 'left';
-      ctx.fillText('✓ FACT', 74, 404);
-      clippedBlock(s.truth_text, 48, 380, W - 96, f7H, 74, 430, '500 24px Arial', '#00ff88', 'left', W - 158, 99);
+      ctx.font = 'bold 16px Arial'; ctx.fillStyle = '#00ff88'; ctx.textAlign = 'left';
+      ctx.fillText('✓  FACT', 74, 408);
+      clippedBlock(s.truth_text, 48, 382, W - 96, f7H, 74, 440, '500 23px Arial', '#00ff88', 'left', W - 158, 99);
 
       block(s.impact, cx, 606, '400 25px Arial', 'rgba(255,255,255,0.65)', 'center', 880, 3);
 

@@ -339,7 +339,7 @@ function buildGuaranteedFallback(newsItem, rank, pattern = 'A') {
   }};
 
   if (pattern === 'B') return { ...base, pattern:'B', slides:{
-    slide_1:{ label:'PROMPT PACK', headline:'6 ChatGPT Prompts That Save 10 Hours Every Week', subtitle:'Copy-paste ready. Save this.' },
+    slide_1:{ label:'PROMPT PACK', headline:`6 AI Prompts to Master: ${h.split(' ').slice(0, 5).join(' ')}`, subtitle:'Copy-paste ready. Save this.' },
     slide_2:{ title:'Why These Prompts Actually Work', context:`Most people use AI like a search engine and get mediocre results. These prompts treat it like a specialist consultant — giving full role, context, and output format so the AI delivers exactly what you need every single time.`, tease:'I tested 100+ prompts. These 6 survived.' },
     slide_3:{ prompt_number:'1', prompt_name:'The Email Polisher', prompt_text:`Rewrite this email to be professional, clear, and concise. Keep the core message but improve the tone so it sounds confident and respectful. Remove any filler words or redundant sentences. Here is my draft: [paste your email here]`, use_when:'Before sending any important professional or client email', output_description:'Polished professional email ready to send' },
     slide_4:{ prompt_number:'2', prompt_name:'The Meeting Summarizer', prompt_text:`You are an expert meeting facilitator. Read these meeting notes and create: 1) A 3-bullet executive summary of the key decisions, 2) A complete list of all action items with owner names and deadlines, 3) Any open questions that still need to be resolved. Meeting notes: [paste notes here]`, use_when:'After every team meeting, client call, or brainstorm session', output_description:'Structured summary with all action items' },
