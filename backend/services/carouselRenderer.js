@@ -1329,11 +1329,11 @@ function drawPatternSlide(ctx, slideNum, post) {
       block(s.verdict_reason, cx, 550, '400 26px Arial', 'rgba(255,255,255,0.7)', 'center', 880, 3);
     } else if (slideNum === 9) {
       block('Who Should Use What?', cx, 128, 'bold 46px Arial', '#fff', 'center', 880, 2);
-      let y = 200;
+      let y = 196;
       [['Students', s.for_students, acc], ['Professionals', s.for_professionals, '#a78bfa'], ['Budget users', s.for_budget, '#00ff88'], ['Power users', s.for_power_users, '#ff006e']].forEach(([lbl, val, col]) => {
-        card(48, y, W - 96, 124); 
-        ctx.font = 'bold 26px Arial'; ctx.fillStyle = col; ctx.textAlign = 'left'; ctx.fillText(lbl + ':', 80, y + 42);
-        block(val, 80, y + 64, '400 25px Arial', '#fff', 'left', W - 160, 2); y += 140;
+        card(48, y, W - 96, 130); 
+        ctx.font = 'bold 24px Arial'; ctx.fillStyle = col; ctx.textAlign = 'left'; ctx.fillText(lbl + ':', 80, y + 34);
+        block(val, 80, y + 70, '400 23px Arial', 'rgba(255,255,255,0.85)', 'left', W - 160, 2); y += 148;
       });
     } else if (slideNum === 10) { drawSlide10(ctx, { ...s, summary: s.verdict || s.summary || '' }, post); }
 
