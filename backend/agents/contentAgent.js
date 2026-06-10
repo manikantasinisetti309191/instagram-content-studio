@@ -188,8 +188,8 @@ slide_1: label(pick best: TOOL DROP / JUST LAUNCHED / FREE TOOL / GAME CHANGER),
 slide_2: title("What Is [ToolName] Exactly?" — use the actual tool name), one_liner(1 crystal-clear sentence about what this specific tool does), analogy("It's like X but Y" — use a real familiar product as comparison), key_fact(surprising specific stat or real capability about THIS tool)
 slide_3/4/5: three DIFFERENT use cases each with use_case_title("Use It To [Specific Outcome]"), who_its_for("For: [specific audience]"), step_1(exact action with real URL or button name), step_2(exact next step), step_3(exact result step), time_saved("Saves X hours/week on [specific task]")
 slide_6: slide_label="COPY THIS PROMPT", prompt_name(descriptive name for what this prompt does), prompt_text(REAL copy-pasteable prompt using this tool — AT LEAST 120 characters — write the ACTUAL PROMPT TEXT you would paste into the tool, not a description of it), expected_output("You'll get: [specific result]")
-slide_7: title("Who Is This For?"), for_students(specific benefit max 12 words), for_employees(specific benefit), for_creators(specific benefit), for_business(specific benefit)
-slide_8: title("Start in 5 Minutes"), step_1("Go to [REAL URL for this tool]"), step_2(exact action inside the tool), step_3(exact first result step), closing_line("That's it. You're in." or similar)
+slide_7: title("Who Is This For?"), for_students(ONE punchy benefit — MAX 10 WORDS e.g. "Build AI projects without coding skills"), for_employees(ONE benefit MAX 10 WORDS), for_creators(ONE benefit MAX 10 WORDS), for_business(ONE benefit MAX 10 WORDS)
+slide_8: title("Start in 5 Minutes"), step_1("Go to [REAL URL] and [one action]" — MAX 12 WORDS), step_2(exact action inside tool — MAX 12 WORDS), step_3(exact result step — MAX 12 WORDS), closing_line("That's it. You're in." or similar — max 8 words)
 slide_9: title("The Honest Catch"), limitation_1(real specific limitation of THIS tool), limitation_2(another real limitation), still_worth_it(one strong specific reason it is still the best choice)
 slide_10: verdict(bold specific opinion about this tool in 15 words), save_cta("Save this guide — you'll need it later 🔖"), follow_cta("Follow @learnwithmanii for daily AI tool drops 🤖"), comment_question(specific question about this tool that invites debate)`,
     B: `slide_1: label="PROMPT PACK", headline("[N] [Model] Prompts That [Specific Benefit]"), subtitle("Copy-paste ready. Save this.")
@@ -245,7 +245,8 @@ QUALITY CONTRACT — your output will be automatically validated. Any failure = 
 - tool_name: brand/product name only, max 4 words, no verbs
 - verdict: 10+ words, must be an opinion statement (not a question)
 - all step fields (step_1, step_2, step_3, action, exact_input): 20+ characters
-- all "for_X" audience fields: 10+ characters
+- all "for_X" audience fields: 10+ chars, MAX 65 chars (HARD LIMIT — must be a single punchy sentence of max 10 words)
+- all step fields in slide_8 (step_1, step_2, step_3): MAX 80 chars — be concise
 - myth_text / truth_text: 20+ characters, must be specific
 - all "reason" fields: 15+ characters
 

@@ -183,6 +183,24 @@ const SEMANTIC_VALIDATORS = {
     if (val.split(' ').length < 5) return `verdict is too short — write a complete opinion of at least 5 words`;
     return null;
   },
+
+  // Audience fields (slide 7) must be concise — max 10 words to fit in cards
+  for_students(val) {
+    if (val.split(' ').length > 13) return `for_students is ${val.split(' ').length} words — keep to max 10 words for card layout`;
+    return null;
+  },
+  for_employees(val) {
+    if (val.split(' ').length > 13) return `for_employees is ${val.split(' ').length} words — keep to max 10 words for card layout`;
+    return null;
+  },
+  for_creators(val) {
+    if (val.split(' ').length > 13) return `for_creators is ${val.split(' ').length} words — keep to max 10 words for card layout`;
+    return null;
+  },
+  for_business(val) {
+    if (val.split(' ').length > 13) return `for_business is ${val.split(' ').length} words — keep to max 10 words for card layout`;
+    return null;
+  },
 };
 
 const PLACEHOLDER_RE = /^string$|^\[|^undefined$|^null$|^Your\s/i;

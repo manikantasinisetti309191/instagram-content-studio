@@ -930,6 +930,34 @@ function drawPatternSlide(ctx, slideNum, post) {
     drawGlassCard(ctx, x, y, w, h, 16);
   }
 
+  /**
+   * clippedBlock — draw wrapped text STRICTLY inside a card boundary.
+   * Canvas has no CSS overflow:hidden, so we use a clip rect.
+   * @param {string} text
+   * @param {number} cardX/Y/W/H  — the card that clips the text
+   * @param {number} textX/Y      — text anchor position
+   * @param {string} font
+   * @param {string} color
+   * @param {string} align
+   * @param {number} maxW         — max text wrap width
+   * @param {number} maxLines
+   */
+  function clippedBlock(text, cardX, cardY, cardW, cardH, textX, textY, font, color, align, maxW, maxLines) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(cardX + 2, cardY + 2, cardW - 4, cardH - 4); // clip to inside card border
+    ctx.clip();
+    ctx.font = font;
+    ctx.fillStyle = color;
+    ctx.textAlign = align || 'left';
+    const lines = wrap(text, maxW || cardW - 40, maxLines || 99);
+    const fs = parseInt(font);
+    const lh = fs * 1.35;
+    lines.forEach((line, i) => ctx.fillText(line, textX, textY + i * lh));
+    ctx.restore();
+    return textY + lines.length * lh;
+  }
+
   const acc = themeKey.accent;
   const W = WIDTH, H = HEIGHT;
   const cx = W / 2;
@@ -974,59 +1002,111 @@ function drawPatternSlide(ctx, slideNum, post) {
       wrapText(ctx, stripEmoji(s.prompt_text || ''), W - 160).slice(0, 13).forEach((l, i) => ctx.fillText(l, 78, 280 + i * 36));
       block(s.expected_output, cx, 790, '500 26px Arial', '#a78bfa', 'center', 880, 2);
     } else if (slideNum === 7) {
-      block(s.title || 'Who Is This For?', cx, 130, 'bold 50px Arial', '#fff', 'center', 880, 2);
-      const segs = [['Students', s.for_students], ['Employees', s.for_employees], ['Creators', s.for_creators], ['Business', s.for_business]];
-      const cw = (W - 144) / 2; // card width with gap
-      segs.forEach(([label, val], i) => {
-        const col = i % 2, row = Math.floor(i / 2);
-        const cardX = 48 + col * (cw + 24);
-        const cardY = 218 + row * 296;
-        const cardH = 270;
-        const textCx = cardX + cw / 2;
-        card(cardX, cardY, cw, cardH);
-        block(label, textCx, cardY + 44, 'bold 24px Arial', acc, 'center', cw - 24, 1);
-        // Auto-shrink text: try 21px first (3 lines), then 18px (4 lines) if too long
-        const valText = stripEmoji(val || '');
-        ctx.font = '400 21px Arial';
-        const lines21 = wrapText(ctx, valText, cw - 32);
-        const fontSize = lines21.length <= 4 ? 21 : 18;
-        const maxL = lines21.length <= 4 ? 4 : 5;
-        block(val, textCx, cardY + 84, `400 ${fontSize}px Arial`, 'rgba(255,255,255,0.80)', 'center', cw - 32, maxL);
+      // WHO IS THIS FOR — 2x2 grid with dynamic-fit text
+      block(s.title || 'Who Is This For?', cx, 130, 'bold 48px Arial', '#fff', 'center', 880, 2);
+      const segments = [
+        ['STUDENTS',  s.for_students],
+        ['EMPLOYEES', s.for_employees],
+        ['CREATORS',  s.for_creators],
+        ['BUSINESS',  s.for_business]
+      ];
+      const gCw = (W - 144) / 2;   // grid card width
+      const gCh = 255;              // grid card height
+      const gGap = 18;              // gap between rows
+      segments.forEach(([label, val], i) => {
+        const col = i % 2;
+        const row = Math.floor(i / 2);
+        const gx = 48 + col * (gCw + 24);
+        const gy = 218 + row * (gCh + gGap);
+        card(gx, gy, gCw, gCh);
+        // Label
+        ctx.font = 'bold 20px Arial';
+        ctx.fillStyle = acc;
+        ctx.textAlign = 'left';
+        ctx.fillText(label, gx + 18, gy + 30);
+        // Find largest font size where ALL lines fit inside card
+        const labelH = 38; // px used by label + gap
+        const availH = gCh - labelH - 16; // space available for text
+        const textW = gCw - 36;
+        let fs = 19, lines;
+        while (fs >= 13) {
+          ctx.font = `400 ${fs}px Arial`;
+          lines = wrapText(ctx, stripEmoji(val || ''), textW);
+          if (lines.length * (fs * 1.35) <= availH) break;
+          fs -= 1;
+        }
+        // Draw lines — clipped so absolutely nothing leaks out
+        clippedBlock(val, gx, gy + labelH, gCw, availH + 8, gx + 18, gy + labelH + fs, `400 ${fs}px Arial`, 'rgba(255,255,255,0.9)', 'left', textW, 99);
       });
     } else if (slideNum === 8) {
-      block(s.title || 'Start in 5 Minutes', cx, 128, 'bold 50px Arial', '#fff', 'center', 880, 2);
-      let y = 210;
-      [s.step_1, s.step_2, s.step_3].filter(Boolean).forEach((step, i) => {
-        const cardH = 152; // taller card = enough room for 2 wrapped lines
-        card(48, y, W - 96, cardH);
-        ctx.font = 'bold 34px Arial'; ctx.fillStyle = acc; ctx.textAlign = 'left'; ctx.fillText(`${i + 1}`, 82, y + 60);
-        // Auto-shrink: try 26px, fall back to 23px for very long steps
-        const stepText = stripEmoji(step || '');
-        ctx.font = '500 26px Arial';
-        const lines26 = wrapText(ctx, stepText, W - 192);
-        const fs = lines26.length <= 2 ? 26 : 23;
-        block(step, 124, y + 38, `500 ${fs}px Arial`, '#fff', 'left', W - 192, 2);
-        y += 168;
+      // START IN 5 MINUTES — steps that always fit
+      block(s.title || 'Start in 5 Minutes', cx, 128, 'bold 48px Arial', '#fff', 'center', 880, 2);
+      const steps = [s.step_1, s.step_2, s.step_3].filter(Boolean);
+      const sCh = Math.min(180, Math.floor((840 - 210 - (steps.length - 1) * 16) / steps.length));
+      let sy = 210;
+      steps.forEach((step, i) => {
+        card(48, sy, W - 96, sCh);
+        // Number — vertically centered
+        ctx.font = 'bold 36px Arial';
+        ctx.fillStyle = acc;
+        ctx.textAlign = 'left';
+        ctx.fillText(`${i + 1}`, 80, sy + sCh / 2 + 13);
+        // Text: fit into available area
+        const tW = W - 210; // right of number to right edge
+        const availH = sCh - 20;
+        let fs = 26, lines;
+        while (fs >= 18) {
+          ctx.font = `500 ${fs}px Arial`;
+          lines = wrapText(ctx, stripEmoji(step || ''), tW);
+          if (lines.length * (fs * 1.35) <= availH) break;
+          fs -= 2;
+        }
+        // Vertically center the text block in the card
+        const totalTextH = lines.length * (fs * 1.35);
+        const textStartY = sy + (sCh - totalTextH) / 2 + fs;
+        clippedBlock(step, 48, sy, W - 96, sCh, 128, textStartY, `500 ${fs}px Arial`, '#fff', 'left', tW, 99);
+        sy += sCh + 16;
       });
-      block(s.closing_line || "That's it. You're in.", cx, y + 24, 'bold 30px Arial', '#00ff88', 'center', 880, 2);
+      if (sy < 900) block(s.closing_line || "That's it. You're in.", cx, sy + 22, 'bold 28px Arial', '#00ff88', 'center', 880, 1);
     } else if (slideNum === 9) {
-      block(s.title || 'The Honest Catch', cx, 128, 'bold 50px Arial', '#fff', 'center', 880, 2);
-      let y = 220;
-      [s.limitation_1, s.limitation_2].filter(Boolean).forEach(lim => {
-        const cardH = 158; // taller = enough for 2 lines at 27px
-        drawGlassCard(ctx, 48, y, W - 96, cardH, 14);
-        ctx.font = 'bold 30px Arial'; ctx.fillStyle = '#ff8080'; ctx.textAlign = 'left'; ctx.fillText('X', 80, y + 60);
-        // Auto-shrink for long limitation text
-        const limText = stripEmoji(lim || '');
-        ctx.font = '500 26px Arial';
-        const limLines = wrapText(ctx, limText, W - 196);
-        const limFs = limLines.length <= 2 ? 26 : 22;
-        block(lim, 122, y + 40, `500 ${limFs}px Arial`, 'rgba(255,255,255,0.85)', 'left', W - 196, 2);
-        y += 178;
+      // THE HONEST CATCH
+      block(s.title || 'The Honest Catch', cx, 128, 'bold 48px Arial', '#fff', 'center', 880, 2);
+      const lims = [s.limitation_1, s.limitation_2].filter(Boolean);
+      const lCh = 175;
+      let ly = 218;
+      lims.forEach(lim => {
+        drawGlassCard(ctx, 48, ly, W - 96, lCh, 14);
+        // X icon
+        ctx.font = 'bold 26px Arial';
+        ctx.fillStyle = '#ff8080';
+        ctx.textAlign = 'left';
+        ctx.fillText('X', 80, ly + lCh / 2 + 10);
+        // Fit text
+        const tW = W - 200;
+        const availH = lCh - 20;
+        let fs = 24, lines;
+        while (fs >= 16) {
+          ctx.font = `500 ${fs}px Arial`;
+          lines = wrapText(ctx, stripEmoji(lim || ''), tW);
+          if (lines.length * (fs * 1.35) <= availH) break;
+          fs -= 2;
+        }
+        const totalTextH = lines.length * (fs * 1.35);
+        const textStartY = ly + (lCh - totalTextH) / 2 + fs;
+        clippedBlock(lim, 48, ly, W - 96, lCh, 118, textStartY, `500 ${fs}px Arial`, 'rgba(255,255,255,0.92)', 'left', tW, 99);
+        ly += lCh + 16;
       });
-      drawGlassCard(ctx, 48, y + 10, W - 96, 158, 14);
-      block('Still worth it:', cx, y + 50, 'bold 28px Arial', '#00ff88', 'center', 880, 1);
-      block(s.still_worth_it, cx, y + 92, '500 26px Arial', '#fff', 'center', W - 144, 2);
+      // Still worth it
+      const swY = ly;
+      const swH = Math.min(148, HEIGHT - 80 - swY);
+      if (swH > 60) {
+        drawGlassCard(ctx, 48, swY, W - 96, swH, 14);
+        ctx.fillStyle = '#00ff88';
+        ctx.font = 'bold 24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Still worth it:', cx, swY + 36);
+        clippedBlock(s.still_worth_it, 48, swY, W - 96, swH, 88, swY + 66, '400 22px Arial', '#fff', 'left', W - 176, 99);
+      }
     } else if (slideNum === 10) {
       // Pass verdict→summary so drawSlide10 can render Pattern A's verdict field
       drawSlide10(ctx, { ...s, summary: s.verdict || s.summary || s.comment_question || '' }, post);
