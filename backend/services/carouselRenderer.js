@@ -1143,8 +1143,8 @@ function drawPatternSlide(ctx, slideNum, post) {
       ctx.font = '400 22px Courier New'; ctx.fillStyle = acc; ctx.textAlign = 'left';
       wrapText(ctx, stripEmoji(s.prompt_text || ''), W - 156).slice(0, 12).forEach((l, i) => ctx.fillText(l, 70, y + 42 + i * 34));
       y += 464;
-      block('Use when: ' + stripEmoji(s.use_when || ''), 58, y + 28, '400 24px Arial', 'rgba(255,255,255,0.45)', 'left', W - 120, 1);
-      block('Output: ' + stripEmoji(s.output_description || ''), 58, y + 58, '400 24px Arial', '#a78bfa', 'left', W - 120, 1);
+      let bottomY = block('Use when: ' + stripEmoji(s.use_when || ''), 58, y + 28, '400 24px Arial', 'rgba(255,255,255,0.45)', 'left', W - 120, 2);
+      block('Output: ' + stripEmoji(s.output_description || ''), 58, bottomY + 10, '400 24px Arial', '#a78bfa', 'left', W - 120, 2);
     } else if (slideNum === 9) {
       block(s.title || 'The Pro Technique', cx, 128, 'bold 50px Arial', '#fff', 'center', 880, 2);
       card(48, 196, W - 96, 154); block(s.technique, cx, 246, '500 28px Arial', '#fff', 'center', W - 150, 3);
@@ -1329,11 +1329,11 @@ function drawPatternSlide(ctx, slideNum, post) {
       block(s.verdict_reason, cx, 550, '400 26px Arial', 'rgba(255,255,255,0.7)', 'center', 880, 3);
     } else if (slideNum === 9) {
       block('Who Should Use What?', cx, 128, 'bold 46px Arial', '#fff', 'center', 880, 2);
-      let y = 224;
+      let y = 200;
       [['Students', s.for_students, acc], ['Professionals', s.for_professionals, '#a78bfa'], ['Budget users', s.for_budget, '#00ff88'], ['Power users', s.for_power_users, '#ff006e']].forEach(([lbl, val, col]) => {
-        card(48, y, W - 96, 108); 
+        card(48, y, W - 96, 124); 
         ctx.font = 'bold 26px Arial'; ctx.fillStyle = col; ctx.textAlign = 'left'; ctx.fillText(lbl + ':', 80, y + 42);
-        block(val, 80, y + 64, '400 25px Arial', '#fff', 'left', W - 160, 1); y += 128;
+        block(val, 80, y + 64, '400 25px Arial', '#fff', 'left', W - 160, 2); y += 140;
       });
     } else if (slideNum === 10) { drawSlide10(ctx, { ...s, summary: s.verdict || s.summary || '' }, post); }
 
