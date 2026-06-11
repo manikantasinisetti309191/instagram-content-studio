@@ -716,6 +716,14 @@ app.post('/api/posts/:postId/approve', async (req, res) => {
       } catch { /* skip unreadable files */ }
     }
 
+    if (!targetPost && req.body && req.body.post_id === postId) {
+      console.log(`⚠️ Post ${postId} not found on disk (server probably restarted). Using frontend payload.`);
+      targetPost = req.body;
+      // Provide a dummy targetData so we don't crash when trying to save back
+      targetData = { content: { posts: [targetPost] } };
+      targetFile = path.join(POSTS_DIR, `run_${postId}.json`); // create a temporary file
+    }
+
     if (!targetPost) {
       return res.status(404).json({ error: `Post not found: ${postId}` });
     }

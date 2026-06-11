@@ -894,7 +894,8 @@ window.submitPublish = async function() {
   S.isPublishing = true;
   setStatusPill('running', 'Publishing...');
   try {
-    await api(`/api/posts/${S.currentPost.post_id}/approve`, 'POST');
+    // Send the entire post object so the backend doesn't need to read from ephemeral disk
+    await api(`/api/posts/${S.currentPost.post_id}/approve`, 'POST', S.currentPost);
   } catch (err) {
     S.isPublishing = false;
     closePublishConfirm();
