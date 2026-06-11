@@ -895,7 +895,6 @@ window.submitPublish = async function() {
   setStatusPill('running', 'Publishing...');
   try {
     await api(`/api/posts/${S.currentPost.post_id}/approve`, 'POST');
-    // WS will call showPublishSuccess on success
   } catch (err) {
     S.isPublishing = false;
     closePublishConfirm();
@@ -906,27 +905,40 @@ window.submitPublish = async function() {
 
 // ==================== PUBLISH SUCCESS SCREEN ====================
 function showPublishSuccess(igPostId, headline) {
-  setStatusPill('done', '✓ Published!');
+  const isPreview = !igPostId || igPostId.startsWith('PREVIEW');
   const overlay = document.getElementById('successOverlay');
   if (!overlay) return;
-  setEl('successHeadline', headline || 'Your post is live!');
-  setEl('successPostId', igPostId ? `Instagram ID: ${igPostId}` : '');
-  // Show link button only if we have a real post ID
-  const linkBtn = document.getElementById('successLinkBtn');
-  if (linkBtn) {
-    if (igPostId && !igPostId.startsWith('PREVIEW')) {
-      linkBtn.style.display = '';
-      linkBtn.href = `https://www.instagram.com/p/${igPostId}/`;
-    } else {
-      linkBtn.style.display = 'none';
-    }
+
+  if (isPreview) {
+    // Instagram is NOT configured — show honest error, not fake success
+    setStatusPill('error', '⚠️ Not Published');
+    const icon = overlay.querySelector('.success-icon');
+    if (icon) icon.textContent = '⚠️';
+    const title = overlay.querySelector('.success-title');
+    if (title) { title.textContent = 'Instagram Not Connected'; title.style.color = '#ff8080'; }
+    setEl('successHeadline', 'Your slides are ready, but Instagram is not configured yet.');
+    setEl('successPostId', '👉 Go to Render Dashboard → Environment → add INSTAGRAM_ACCESS_TOKEN & INSTAGRAM_BUSINESS_ACCOUNT_ID to enable real publishing.');
+    const linkBtn = document.getElementById('successLinkBtn');
+    if (linkBtn) linkBtn.style.display = 'none';
+    const pubBtn = document.getElementById('publishBtn');
+    if (pubBtn) { pubBtn.innerHTML = '<span>⚠️</span><span>Not Connected</span>'; pubBtn.disabled = false; pubBtn.className = 'action-btn secondary'; }
+  } else {
+    // Real publish — show proper success
+    setStatusPill('done', '✓ Published!');
+    const icon = overlay.querySelector('.success-icon');
+    if (icon) icon.textContent = '🎉';
+    const title = overlay.querySelector('.success-title');
+    if (title) { title.textContent = 'Published!'; title.style.color = '#00ff88'; }
+    setEl('successHeadline', headline || 'Your post is live on Instagram!');
+    setEl('successPostId', `Instagram ID: ${igPostId}`);
+    const linkBtn = document.getElementById('successLinkBtn');
+    if (linkBtn) { linkBtn.style.display = ''; linkBtn.href = `https://www.instagram.com/p/${igPostId}/`; }
+    const pubBtn = document.getElementById('publishBtn');
+    if (pubBtn) { pubBtn.innerHTML = '<span>✅</span><span>Published!</span>'; pubBtn.disabled = true; pubBtn.className = 'action-btn secondary'; }
+    const badge = document.getElementById('reviewPostBadge');
+    if (badge) { badge.textContent = 'Published'; badge.className = 'review-badge published'; }
   }
   overlay.classList.remove('hidden');
-  // Update publish btn
-  const pubBtn = document.getElementById('publishBtn');
-  if (pubBtn) { pubBtn.innerHTML = '<span>✅</span><span>Published!</span>'; pubBtn.disabled = true; pubBtn.className = 'action-btn secondary'; }
-  const badge = document.getElementById('reviewPostBadge');
-  if (badge) { badge.textContent = 'Published'; badge.className = 'review-badge published'; }
 }
 
 window.closeSuccessOverlay = function() {
