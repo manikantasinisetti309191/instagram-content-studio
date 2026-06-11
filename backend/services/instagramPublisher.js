@@ -25,8 +25,8 @@ function getPublicBaseUrl() {
 
 class InstagramPublisher {
   constructor() {
-    this.accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
-    this.accountId = process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID;
+    this.accessToken = process.env.INSTAGRAM_ACCESS_TOKEN || 'EAAWySoFew1kBRrHU7JtiP1Dt5CIO4PnuwbDZCrnKhmyGeTnwH6ufGD63LqksxSZCuadh1FfPM1u79wd20Wd7f9ObIdv2T35oEsL64dY6uBog3C3o9YeLmI2FULs7UpTZArZCxr5rLT8OOMn8sf5ve14YD0EAR5dTdZB8le8ggYLT54qYqamSAF2Yi0dZCacAVP';
+    this.accountId = process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID || '17841427690261258';
     this.isConfigured = this.checkConfiguration();
   }
 
