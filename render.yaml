@@ -12,3 +12,7 @@ services:
         value: production
       - key: PORT
         value: 3000
+      - key: INSTAGRAM_ACCESS_TOKEN
+        value: EAAWySoFew1kBRrHU7JtiP1Dt5CIO4PnuwbDZCrnKhmyGeTnwH6ufGD63LqksxSZCuadh1FfPM1u79wd20Wd7f9ObIdv2T35oEsL64dY6uBog3C3o9YeLmI2FULs7UpTZArZCxr5rLT8OOMn8sf5ve14YD0EAR5dTdZB8le8ggYLT54qYqamSAF2Yi0dZCacAVP
+      - key: INSTAGRAM_BUSINESS_ACCOUNT_ID
+        value: 17841427690261258
