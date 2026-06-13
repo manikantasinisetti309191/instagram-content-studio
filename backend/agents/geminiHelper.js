@@ -7,6 +7,11 @@
 require('dotenv').config({ path: require('path').join(__dirname, '../../.env') });
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
+// Fix for Node 18+ IPv6 fetch failures on Render Free Tier
+// Forces DNS resolution to use IPv4 first, preventing "Error fetching from generativelanguage"
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first');
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // Model chain: prioritize high-quota free tier models
