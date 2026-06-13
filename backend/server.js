@@ -38,12 +38,39 @@ const LOGS_DIR = path.join(DATA_DIR, 'logs');
 // Survives disk wipes (Render free tier ephemeral filesystem).
 const imageStore = new Map();
 
+// ─── IN-MEMORY LOG STORE ──────────────────────────────────────────────────────
+const logBuffer = [];
+const originalLog = console.log;
+const originalError = console.error;
+
+function captureLog(type, ...args) {
+  const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
+  const ts = new Date().toISOString();
+  logBuffer.push(`[${ts}] [${type}] ${msg}`);
+  if (logBuffer.length > 500) logBuffer.shift();
+}
+
+console.log = function(...args) {
+  captureLog('INFO', ...args);
+  originalLog.apply(console, args);
+};
+
+console.error = function(...args) {
+  captureLog('ERROR', ...args);
+  originalError.apply(console, args);
+};
 
 // ================================
 // MIDDLEWARE
 // ================================
 app.use(cors());
 app.use(express.json());
+
+// Expose logs endpoint
+app.get('/api/logs', (req, res) => {
+  res.setHeader('Content-Type', 'text/plain');
+  res.send(logBuffer.join('\n') || 'No logs available.');
+});
 
 // Serve frontend files — no-cache for JS/CSS/HTML so deploys are always picked up
 // Images use default caching (unique post IDs act as cache busters)
