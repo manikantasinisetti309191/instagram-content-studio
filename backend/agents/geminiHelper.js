@@ -5,12 +5,19 @@
  */
 
 require('dotenv').config({ path: require('path').join(__dirname, '../../.env') });
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Fix for Node 18+ IPv6 fetch failures on Render Free Tier
 // Forces DNS resolution to use IPv4 first, preventing "Error fetching from generativelanguage"
 const dns = require('dns');
 dns.setDefaultResultOrder('ipv4first');
+
+// Override global fetch with node-fetch (which perfectly respects the DNS ipv4 rule above)
+global.fetch = require('node-fetch');
+global.Headers = fetch.Headers;
+global.Request = fetch.Request;
+global.Response = fetch.Response;
+
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
