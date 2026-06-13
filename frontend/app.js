@@ -82,6 +82,10 @@ function showScreen(name) {
   if (name === 'generating') {
     document.getElementById('nav-home')?.classList.add('active');
   }
+  // Auto-refresh history when switching to history tab
+  if (name === 'history') {
+    loadHistory();
+  }
 }
 
 function goToReview() {
@@ -308,24 +312,21 @@ async function loadLatestPost() {
     const posts = data?.content?.posts;
     if (!posts?.length) {
       showEmptyPostState();
+      // Still load history even if no current post
+      await loadHistory();
       return;
     }
 
     const post = posts[0];
-    S.currentPost = post;
+    // Find publishing status from run data
+    const pubInfo = (data.publishing || []).find(p => p.post_id === post.post_id) || {};
+    S.currentPost = { ...post, ...pubInfo };
     S.allPosts = posts;
 
-    renderLastPostCard(post, data);
+    renderLastPostCard({ ...post, ...pubInfo }, data);
 
-    // Stats from /api/posts (now flat list of post objects)
-    const allPostFiles = await api('/api/posts').catch(() => ({ posts: [] }));
-    const allP = allPostFiles.posts || [];
-    const pub = allP.filter(p => p.instagram_post_id && !p.instagram_post_id.startsWith('PREVIEW')).length;
-    setEl('stat-generated', allP.length);
-    setEl('stat-published', pub);
-    setEl('stat-today', post ? '1' : '—');
-
-    renderHistory(allP);
+    // Stats from /api/history (has real merged data from all run_*.json files)
+    await loadHistory();
     populateReviewScreen(post);
     return post;
   } catch (err) {
@@ -333,6 +334,7 @@ async function loadLatestPost() {
     if (err.status === 404 || (err.message && err.message.includes('No posts'))) {
       dismissWakeupToast();
       showEmptyPostState();
+      await loadHistory();
       return;
     }
     // TypeError = true network failure = server is sleeping
@@ -971,38 +973,105 @@ window.copyText = function(text) {
 };
 
 // ==================== HISTORY ====================
+let _historyFilter = 'all';
+
 async function loadHistory() {
   try {
-    const data = await api('/api/posts');
-    renderHistory(data.posts || []);
-  } catch (_) {}
+    const data = await api(`/api/history?status=${_historyFilter}&limit=50`);
+    const posts = data.posts || [];
+    const stats = data.stats || {};
+
+    // Update dashboard home stats
+    setEl('stat-generated', stats.generated ?? posts.length);
+    setEl('stat-published', stats.published ?? 0);
+    setEl('stat-today', stats.today || '—');
+
+    // Update history page stats strip
+    setEl('hstat-generated', stats.generated ?? '—');
+    setEl('hstat-published', stats.published ?? '—');
+    setEl('hstat-drafts', stats.drafts ?? '—');
+
+    renderHistory(posts, stats);
+  } catch (_) {
+    renderHistory([], {});
+  }
 }
 
-function renderHistory(posts) {
+function renderHistory(posts, stats = {}) {
   const list = document.getElementById('historyList');
   if (!list) return;
-  S.historyPosts = posts; // store indexed, avoid JSON-in-onclick
+  S.historyPosts = posts;
+
+  // Build filter tabs
+  const filterBar = document.getElementById('historyFilterBar');
+  if (filterBar) {
+    const counts = {
+      all: (stats.generated || 0),
+      published: stats.published || 0,
+      draft: stats.drafts || 0,
+      failed: stats.failed || 0
+    };
+    filterBar.innerHTML = ['all','published','draft','failed'].map(f => {
+      const labels = { all: 'All', published: '✅ Published', draft: '🟡 Drafts', failed: '❌ Failed' };
+      const active = _historyFilter === f ? 'active' : '';
+      const count = counts[f] || 0;
+      return `<button class="hist-filter-btn ${active}" onclick="setHistoryFilter('${f}')">${labels[f]} <span class="hist-filter-count">${count}</span></button>`;
+    }).join('');
+  }
+
   if (!posts?.length) {
-    list.innerHTML = `<div class="empty-state-full"><div class="empty-icon">📜</div><div>No posts yet</div></div>`;
+    const emptyMsgs = {
+      all: 'No posts yet — tap Generate to create your first!',
+      published: 'No published posts yet.',
+      draft: 'No drafts saved.',
+      failed: 'No failed posts. All good! 🎉'
+    };
+    list.innerHTML = `<div class="empty-state-full"><div class="empty-icon">📜</div><div>${emptyMsgs[_historyFilter] || 'No posts yet'}</div></div>`;
     return;
   }
-  list.innerHTML = posts.slice(0, 20).map((post, idx) => {
-    const isPublished = post.instagram_post_id && !post.instagram_post_id.startsWith('PREVIEW');
-    const date = post.published_at || post.generated_at || post.generated_date || '';
-    const dateStr = date ? new Date(date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '—';
+
+  list.innerHTML = posts.map((post, idx) => {
+    const status = post.display_status || 'draft';
+    const isPublished = status === 'published';
+    const isDraft = status === 'draft';
+    const isFailed = status === 'failed';
+
+    const dateRaw = post.published_at || post.run_started_at || post.generated_at || '';
+    const dateStr = dateRaw ? new Date(dateRaw).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '—';
+    const timeStr = dateRaw ? new Date(dateRaw).toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' }) : '';
+
+    const badgeClass = isPublished ? 'badge-published' : (isFailed ? 'badge-failed' : 'badge-draft');
+    const badgeText = isPublished ? '✅ Published' : (isFailed ? '❌ Failed' : '🟡 Draft');
+    const statusIcon = isPublished ? '🌐' : (isFailed ? '⚠️' : '📝');
+
+    const slideCount = post.slides?.length || 10;
+    const category = post.category || 'AI';
+
     return `
-      <div class="history-item" onclick="selectHistoryPost(${idx})">
-        <span class="history-emoji">${post.emoji || '🤖'}</span>
-        <div class="history-info">
-          <div class="history-headline">${esc(post.headline || 'AI Update')}</div>
-          <div class="history-meta">
-            <span class="badge ${isPublished ? 'published' : 'preview'}">${isPublished ? '✅ Published' : '🟡 Draft'}</span>
-            <span class="history-date">${dateStr}</span>
-          </div>
+      <div class="history-card ${status}" onclick="selectHistoryPost(${idx})">
+        <div class="history-card-left">
+          <div class="history-emoji-wrap">${post.emoji || '🤖'}</div>
+          <div class="history-status-dot ${status}"></div>
         </div>
+        <div class="history-card-body">
+          <div class="history-headline">${esc(post.headline || 'AI Update')}</div>
+          <div class="history-card-meta">
+            <span class="hist-badge ${badgeClass}">${badgeText}</span>
+            <span class="hist-category">${category}</span>
+            <span class="hist-slides">${slideCount} slides</span>
+          </div>
+          <div class="history-card-date">${statusIcon} ${dateStr}${timeStr ? ' · ' + timeStr : ''}</div>
+          ${isFailed && post.publish_error ? `<div class="history-error-hint">⚠️ ${esc(post.publish_error.substring(0, 60))}...</div>` : ''}
+        </div>
+        <div class="history-card-arrow">›</div>
       </div>`;
   }).join('');
 }
+
+window.setHistoryFilter = function(filter) {
+  _historyFilter = filter;
+  loadHistory();
+};
 
 window.selectHistoryPost = function(idx) {
   const post = S.historyPosts[idx];
@@ -1010,6 +1079,7 @@ window.selectHistoryPost = function(idx) {
   populateReviewScreen(post);
   showScreen('review');
 };
+
 
 // ==================== STATUS PILL ====================
 function setStatusPill(state, text) {

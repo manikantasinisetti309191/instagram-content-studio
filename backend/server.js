@@ -180,33 +180,106 @@ app.get('/api/status', (req, res) => {
   });
 });
 
-// Get all posts — returns flat list of individual post objects
+// ─── SHARED HELPER: read all run_*.json files and return enriched post list ───
+function readAllRunPosts() {
+  const files = fs.readdirSync(POSTS_DIR)
+    .filter(f => f.startsWith('run_') && f.endsWith('.json'))
+    .sort().reverse(); // newest first
+
+  const posts = [];
+  for (const file of files) {
+    try {
+      const data = JSON.parse(fs.readFileSync(path.join(POSTS_DIR, file), 'utf-8'));
+      const contentPosts = data.content?.posts || [];
+      const publishingResults = data.publishing || [];
+
+      contentPosts.forEach((p, i) => {
+        const pubResult = publishingResults[i] || publishingResults.find(pr => pr.post_id === p.post_id) || {};
+        const isPublished = pubResult.status === 'published' && pubResult.instagram_post_id;
+        const isDraft = pubResult.status === 'preview' || !pubResult.status;
+        const isFailed = pubResult.status === 'failed';
+
+        posts.push({
+          ...p,
+          // Merge publishing data
+          status: pubResult.status || 'draft',
+          instagram_post_id: pubResult.instagram_post_id || null,
+          published_at: pubResult.published_at || null,
+          publish_error: pubResult.error || null,
+          preview_mode: pubResult.preview_mode !== false,
+          // Display helpers
+          display_status: isPublished ? 'published' : (isFailed ? 'failed' : 'draft'),
+          run_file: file,
+          run_id: data.run_id || file.replace('.json',''),
+          run_started_at: data.started_at || null,
+        });
+      });
+    } catch { /* skip corrupt files */ }
+  }
+  return posts;
+}
+
+// Get all posts — flat list with publishing status merged
 app.get('/api/posts', (req, res) => {
   try {
-    const files = fs.readdirSync(POSTS_DIR)
-      .filter(f => f.endsWith('.json') && !f.startsWith('run_') && !f.startsWith('quality_'))
-      .sort().reverse()
-      .slice(0, 30);
-
-    // Each file has shape { content: { posts: [...] } } — flatten to individual posts
-    const posts = [];
-    for (const file of files) {
-      try {
-        const data = JSON.parse(fs.readFileSync(path.join(POSTS_DIR, file), 'utf-8'));
-        const filePosts = data.content?.posts || [];
-        // Attach the file date to each post for display
-        const fileDate = file.replace('.json', '');
-        filePosts.forEach(p => {
-          posts.push({ ...p, generated_date: fileDate });
-        });
-      } catch { /* skip unreadable files */ }
-    }
-
+    const posts = readAllRunPosts().slice(0, 50);
     res.json({ posts, total: posts.length });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
+
+// GET /api/history — grouped history with filter support (?status=published|draft|failed|all)
+app.get('/api/history', (req, res) => {
+  try {
+    const { status = 'all', limit = 50 } = req.query;
+    let posts = readAllRunPosts();
+
+    // Deduplicate by headline (keep the one with published status if exists)
+    const seen = new Map();
+    for (const p of posts) {
+      const key = p.headline;
+      if (!seen.has(key) || p.display_status === 'published') {
+        seen.set(key, p);
+      }
+    }
+    posts = Array.from(seen.values());
+
+    // Apply status filter
+    if (status !== 'all') {
+      posts = posts.filter(p => p.display_status === status);
+    }
+
+    // Sort published first, then by date
+    posts.sort((a, b) => {
+      if (a.display_status === 'published' && b.display_status !== 'published') return -1;
+      if (b.display_status === 'published' && a.display_status !== 'published') return 1;
+      return new Date(b.published_at || b.run_started_at || 0) - new Date(a.published_at || a.run_started_at || 0);
+    });
+
+    const all = readAllRunPosts();
+    const totalGenerated = new Map();
+    all.forEach(p => totalGenerated.set(p.headline, true));
+    const totalPublished = all.filter(p => p.display_status === 'published').length;
+    const today = new Date().toISOString().split('T')[0];
+    const todayCount = all.filter(p => (p.published_at || '').startsWith(today)).length;
+
+    res.json({
+      posts: posts.slice(0, parseInt(limit)),
+      total: posts.length,
+      stats: {
+        generated: totalGenerated.size,
+        published: totalPublished,
+        today: todayCount,
+        drafts: all.filter(p => p.display_status === 'draft').length,
+        failed: all.filter(p => p.display_status === 'failed').length
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 // Get today's posts
 app.get('/api/posts/today', (req, res) => {

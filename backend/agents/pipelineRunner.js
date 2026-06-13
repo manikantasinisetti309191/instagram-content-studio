@@ -429,7 +429,21 @@ async function runPipeline(options = {}) {
     pipelineResult.status = 'success';
     pipelineResult.completed_at = new Date().toISOString();
     fs.writeFileSync(runFile, JSON.stringify(pipelineResult, null, 2));
-    
+
+    // Auto-commit to GitHub so post data survives Render disk wipes
+    const { execSync } = require('child_process');
+    const repoRoot = path.join(__dirname, '../../');
+    try {
+      const relPath = `backend/data/posts/run_${pipelineResult.run_id}.json`;
+      execSync(`git -C "${repoRoot}" add "${relPath}"`, { timeout: 10000 });
+      execSync(`git -C "${repoRoot}" commit -m "data: auto-save run ${pipelineResult.run_id}"`, { timeout: 10000 });
+      execSync(`git -C "${repoRoot}" push --no-verify`, { timeout: 30000 });
+      console.log(`✅ Run data committed to GitHub: ${pipelineResult.run_id}`);
+    } catch (gitErr) {
+      // Non-fatal — git may not be configured on Render, or nothing to commit
+      console.log(`ℹ️ Git auto-commit skipped: ${gitErr.message?.split('\n')[0]}`);
+    }
+
     pipelineState.status = 'idle';
     pipelineState.currentStep = null;
     

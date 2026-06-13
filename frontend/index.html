@@ -246,7 +246,30 @@
     <!-- ==================== SCREEN: HISTORY ==================== -->
     <div id="screen-history" class="screen">
       <div class="screen-content">
-        <div class="page-title">History</div>
+        <div class="history-page-header">
+          <div class="page-title">History</div>
+          <button class="hist-refresh-btn" onclick="loadHistory()" title="Refresh">↻</button>
+        </div>
+
+        <!-- Stats strip -->
+        <div class="history-stats-strip">
+          <div class="hist-stat-chip">
+            <span class="hist-stat-num" id="hstat-generated">—</span>
+            <span class="hist-stat-label">Unique Topics</span>
+          </div>
+          <div class="hist-stat-chip">
+            <span class="hist-stat-num green" id="hstat-published">—</span>
+            <span class="hist-stat-label">Published</span>
+          </div>
+          <div class="hist-stat-chip">
+            <span class="hist-stat-num yellow" id="hstat-drafts">—</span>
+            <span class="hist-stat-label">Drafts</span>
+          </div>
+        </div>
+
+        <!-- Filter tabs -->
+        <div id="historyFilterBar" class="history-filter-bar"></div>
+
         <div id="historyList" class="history-list">
           <div class="empty-state-full">
             <div class="empty-icon">📜</div>
