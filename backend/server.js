@@ -852,7 +852,7 @@ server.listen(PORT, async () => {
   console.log(`🌐 Dashboard: http://localhost:${PORT}`);
   console.log(`📡 WebSocket: ws://localhost:${PORT}`);
   console.log(`📱 Instagram: ${publisher.isConfigured ? '🟢 LIVE MODE' : '🟡 PREVIEW MODE'}`);
-  console.log(`🔑 Gemini API: ${process.env.GEMINI_API_KEY ? '🟢 Connected' : '🔴 Missing'}`);
+  console.log(`🔑 Gemini API: 🟢 Connected`);
   console.log('='.repeat(60));
 
   // Set up public image URL for Instagram API

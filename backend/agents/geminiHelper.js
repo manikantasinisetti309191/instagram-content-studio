@@ -29,13 +29,8 @@ const GEMINI_KEY = process.env.GEMINI_API_KEY || (p1 + p2 + p3 + p4);
 const genAI = new GoogleGenerativeAI(GEMINI_KEY);
 
 // Model chain: prioritize high-quota free tier models
-// gemini-1.5-flash:    1500 req/day free - PRIMARY workhorse
-// gemini-2.5-flash:    500 req/day free  - good quality backup
-// gemini-1.5-flash-8b: 1500 req/day free - lightweight emergency fallback
 const MODEL_CHAIN = [
-  'gemini-1.5-flash',
-  'gemini-2.5-flash',
-  'gemini-1.5-flash-8b'
+  'gemini-2.5-flash'
 ];
 
 const GENERATION_CONFIGS = {
