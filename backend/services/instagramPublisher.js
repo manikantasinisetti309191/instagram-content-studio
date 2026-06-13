@@ -47,7 +47,7 @@ class InstagramPublisher {
    * Convert a local image file path to a public URL via ngrok tunnel
    */
   getPublicImageUrl(localImagePath) {
-    const base = PUBLIC_BASE_URL;
+    const base = PUBLIC_BASE_URL ? PUBLIC_BASE_URL.replace(/\/+$/, '') : null;
     if (!base) throw new Error('No public URL configured. ngrok tunnel not started yet.');
 
     // Extract: backend/data/images/post_xxx/slide_1.png -> images/post_xxx/slide_1.png
@@ -66,7 +66,12 @@ class InstagramPublisher {
     }
 
     const imageUrl = this.getPublicImageUrl(localImagePath);
-    console.log(`    📸 Uploading: ${path.basename(localImagePath)} → ${imageUrl}`);
+    
+    // Bypass Render's Cloudflare anti-bot blocks by proxying the image through wsrv.nl
+    // Facebook scraper gets blocked by free tier Render directly, but wsrv.nl does not.
+    const proxiedImageUrl = `https://wsrv.nl/?url=${encodeURIComponent(imageUrl)}`;
+    
+    console.log(`    📸 Uploading: ${path.basename(localImagePath)} → ${proxiedImageUrl}`);
 
     try {
       const response = await axios.post(
@@ -74,7 +79,7 @@ class InstagramPublisher {
         null,
         {
           params: {
-            image_url: imageUrl,
+            image_url: proxiedImageUrl,
             is_carousel_item: true,
             access_token: this.accessToken
           }
@@ -82,8 +87,10 @@ class InstagramPublisher {
       );
       return response.data.id;
     } catch (error) {
-      const errMsg = error.response?.data?.error?.message || error.message;
+      const apiErr = error.response?.data?.error;
+      const errMsg = apiErr ? `[${apiErr.code}] ${apiErr.type}: ${apiErr.message} (Subcode: ${apiErr.error_subcode})` : error.message;
       console.error(`    ❌ Image upload failed: ${errMsg}`);
+      console.error(JSON.stringify(apiErr || {}, null, 2));
       throw new Error(errMsg);
     }
   }
@@ -138,8 +145,10 @@ class InstagramPublisher {
       );
       return { id: response.data.id, preview_mode: false, published_at: new Date().toISOString() };
     } catch (error) {
-      const errMsg = error.response?.data?.error?.message || error.message;
+      const apiErr = error.response?.data?.error;
+      const errMsg = apiErr ? `[${apiErr.code}] ${apiErr.type}: ${apiErr.message} (Subcode: ${apiErr.error_subcode})` : error.message;
       console.error(`    ❌ Publish failed: ${errMsg}`);
+      console.error(JSON.stringify(apiErr || {}, null, 2));
       throw new Error(errMsg);
     }
   }
