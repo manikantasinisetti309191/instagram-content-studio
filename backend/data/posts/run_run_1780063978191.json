@@ -1,0 +1,713 @@
+{
+  "run_id": "run_1780063978191",
+  "started_at": "2026-05-29T14:12:58.191Z",
+  "status": "success",
+  "research": {
+    "news_items": [
+      {
+        "id": "fallback_001",
+        "headline": "OpenAI Launches GPT-5 with Unprecedented Reasoning",
+        "summary": "OpenAI has released GPT-5, featuring dramatically improved reasoning capabilities and multimodal understanding. The model shows a 50% improvement on benchmark tests.",
+        "source": "OpenAI",
+        "impact": "Redefines what AI can accomplish for businesses and creators worldwide.",
+        "viral_score": 10,
+        "relevance_score": 10,
+        "innovation_score": 9,
+        "category": "Model Release",
+        "emoji": "🚀",
+        "researched_at": "2026-05-29T14:12:58.652Z"
+      },
+      {
+        "id": "fallback_002",
+        "headline": "Google Gemini 2.0 Ultra Now Available for Everyone",
+        "summary": "Google has opened access to its most powerful Gemini model to all users. The update includes real-time information, improved coding, and native video understanding.",
+        "source": "Google",
+        "impact": "Puts enterprise-grade AI in the hands of everyday creators and businesses.",
+        "viral_score": 9,
+        "relevance_score": 9,
+        "innovation_score": 8,
+        "category": "New Feature",
+        "emoji": "✨",
+        "researched_at": "2026-05-29T14:12:58.652Z"
+      },
+      {
+        "id": "fallback_003",
+        "headline": "Anthropic Claude 4 Beats All Models on Coding Tasks",
+        "summary": "Anthropic released Claude 4, which now outperforms all competitors on coding benchmarks. The model can handle 500k context windows and write complete applications.",
+        "source": "Anthropic",
+        "impact": "Transforms software development by enabling AI to write entire codebases.",
+        "viral_score": 9,
+        "relevance_score": 10,
+        "innovation_score": 9,
+        "category": "Model Release",
+        "emoji": "💻",
+        "researched_at": "2026-05-29T14:12:58.652Z"
+      },
+      {
+        "id": "fallback_004",
+        "headline": "Midjourney V7 Generates Photorealistic Videos Now",
+        "summary": "Midjourney has launched V7 with integrated video generation capabilities. Users can now create 30-second photorealistic videos from text prompts directly in Discord.",
+        "source": "Midjourney",
+        "impact": "Democratizes professional video production for creators and businesses.",
+        "viral_score": 10,
+        "relevance_score": 10,
+        "innovation_score": 10,
+        "category": "Tool Launch",
+        "emoji": "🎬",
+        "researched_at": "2026-05-29T14:12:58.652Z"
+      },
+      {
+        "id": "fallback_005",
+        "headline": "ElevenLabs Launches Real-Time Voice Cloning in 40 Languages",
+        "summary": "ElevenLabs released its most advanced voice cloning technology supporting 40 languages with emotional nuance and real-time latency under 200ms.",
+        "source": "ElevenLabs",
+        "impact": "Enables global content creators to scale their voice content effortlessly.",
+        "viral_score": 8,
+        "relevance_score": 9,
+        "innovation_score": 8,
+        "category": "New Feature",
+        "emoji": "🎙️",
+        "researched_at": "2026-05-29T14:12:58.652Z"
+      }
+    ],
+    "research_date": "2026-05-29T14:12:58.652Z",
+    "total_items": 5
+  },
+  "filter": {
+    "selected_items": [
+      {
+        "id": "fallback_004",
+        "headline": "Midjourney V7 Generates Photorealistic Videos Now",
+        "summary": "Midjourney has launched V7 with integrated video generation capabilities. Users can now create 30-second photorealistic videos from text prompts directly in Discord.",
+        "source": "Midjourney",
+        "impact": "Democratizes professional video production for creators and businesses.",
+        "viral_score": 10,
+        "relevance_score": 10,
+        "innovation_score": 10,
+        "category": "Tool Launch",
+        "emoji": "🎬",
+        "researched_at": "2026-05-29T14:12:58.652Z",
+        "final_score": 10,
+        "rank": 1,
+        "selection_reason": "Auto-selected based on score",
+        "instagram_angle": "Breaking: Midjourney V7 Generates Photorealistic Videos Now"
+      },
+      {
+        "id": "fallback_001",
+        "headline": "OpenAI Launches GPT-5 with Unprecedented Reasoning",
+        "summary": "OpenAI has released GPT-5, featuring dramatically improved reasoning capabilities and multimodal understanding. The model shows a 50% improvement on benchmark tests.",
+        "source": "OpenAI",
+        "impact": "Redefines what AI can accomplish for businesses and creators worldwide.",
+        "viral_score": 10,
+        "relevance_score": 10,
+        "innovation_score": 9,
+        "category": "Model Release",
+        "emoji": "🚀",
+        "researched_at": "2026-05-29T14:12:58.652Z",
+        "final_score": 9.666666666666666,
+        "rank": 2,
+        "selection_reason": "Auto-selected based on score",
+        "instagram_angle": "Breaking: OpenAI Launches GPT-5 with Unprecedented Reasoning"
+      },
+      {
+        "id": "fallback_003",
+        "headline": "Anthropic Claude 4 Beats All Models on Coding Tasks",
+        "summary": "Anthropic released Claude 4, which now outperforms all competitors on coding benchmarks. The model can handle 500k context windows and write complete applications.",
+        "source": "Anthropic",
+        "impact": "Transforms software development by enabling AI to write entire codebases.",
+        "viral_score": 9,
+        "relevance_score": 10,
+        "innovation_score": 9,
+        "category": "Model Release",
+        "emoji": "💻",
+        "researched_at": "2026-05-29T14:12:58.652Z",
+        "final_score": 9.333333333333334,
+        "rank": 3,
+        "selection_reason": "Auto-selected based on score",
+        "instagram_angle": "Breaking: Anthropic Claude 4 Beats All Models on Coding Tasks"
+      },
+      {
+        "id": "fallback_002",
+        "headline": "Google Gemini 2.0 Ultra Now Available for Everyone",
+        "summary": "Google has opened access to its most powerful Gemini model to all users. The update includes real-time information, improved coding, and native video understanding.",
+        "source": "Google",
+        "impact": "Puts enterprise-grade AI in the hands of everyday creators and businesses.",
+        "viral_score": 9,
+        "relevance_score": 9,
+        "innovation_score": 8,
+        "category": "New Feature",
+        "emoji": "✨",
+        "researched_at": "2026-05-29T14:12:58.652Z",
+        "final_score": 8.666666666666666,
+        "rank": 4,
+        "selection_reason": "Auto-selected based on score",
+        "instagram_angle": "Breaking: Google Gemini 2.0 Ultra Now Available for Everyone"
+      },
+      {
+        "id": "fallback_005",
+        "headline": "ElevenLabs Launches Real-Time Voice Cloning in 40 Languages",
+        "summary": "ElevenLabs released its most advanced voice cloning technology supporting 40 languages with emotional nuance and real-time latency under 200ms.",
+        "source": "ElevenLabs",
+        "impact": "Enables global content creators to scale their voice content effortlessly.",
+        "viral_score": 8,
+        "relevance_score": 9,
+        "innovation_score": 8,
+        "category": "New Feature",
+        "emoji": "🎙️",
+        "researched_at": "2026-05-29T14:12:58.652Z",
+        "final_score": 8.333333333333334,
+        "rank": 5,
+        "selection_reason": "Auto-selected based on score",
+        "instagram_angle": "Breaking: ElevenLabs Launches Real-Time Voice Cloning in 40 Languages"
+      }
+    ],
+    "filter_date": "2026-05-29T14:12:58.866Z",
+    "total_evaluated": 5
+  },
+  "content": {
+    "posts": [
+      {
+        "post_id": "post_1780063979148_1",
+        "rank": 1,
+        "news_id": "fallback_004",
+        "headline": "Midjourney V7 Generates Photorealistic Videos Now",
+        "category": "Tool Launch",
+        "emoji": "🎬",
+        "slides": {
+          "slide_1": {
+            "label": "BREAKING",
+            "title": "Midjourney V7 Generates Photorealistic Videos Now",
+            "subtitle": "Midjourney has launched V7 with integrated video generation ..."
+          },
+          "slide_2": {
+            "title": "What Happened?",
+            "bullet_1": "Midjourney has launched V7 with integrated video generation capabilities",
+            "bullet_2": "Midjourney made a major announcement",
+            "bullet_3": "This changes everything for creators"
+          },
+          "slide_3": {
+            "title": "Why This Matters",
+            "impact_statement": "Democratizes professional video production for creators and businesses.",
+            "detail": "AI is evolving faster than ever before.",
+            "stat_or_quote": "Viral Score: 10/10"
+          },
+          "slide_4": {
+            "title": "How You Can Use This",
+            "use_case_1": "🎨 Create better content faster",
+            "use_case_2": "💼 Automate your business tasks",
+            "use_case_3": "🚀 Stay ahead of the competition",
+            "pro_tip": "Start experimenting with this today!"
+          },
+          "slide_5": {
+            "title": "The Bottom Line",
+            "summary": "Democratizes professional video production for creators and businesses.",
+            "cta_question": "Will you try this AI tool?",
+            "cta_action": "Save this for later 🔖"
+          }
+        },
+        "caption": {
+          "hook": "🚨 Midjourney V7 Generates Photorealistic Videos Now",
+          "body": "Midjourney has launched V7 with integrated video generation capabilities. Users can now create 30-second photorealistic videos from text prompts directly in Discord.",
+          "engagement_prompt": "Would you use this AI tool? Comment below 👇",
+          "save_prompt": "Save this for your AI research 🔖",
+          "call_to_action": "Follow @aiinsider for daily AI updates 🤖",
+          "full_caption": "🚨 Midjourney V7 Generates Photorealistic Videos Now\n\nMidjourney has launched V7 with integrated video generation capabilities. Users can now create 30-second photorealistic videos from text prompts directly in Discord.\n\nDemocratizes professional video production for creators and businesses.\n\nWould you use this? Comment below 👇\n\n#AI #ArtificialIntelligence #AINews #TechNews #AITools"
+        },
+        "hashtags": [
+          "#AI",
+          "#ArtificialIntelligence",
+          "#AINews",
+          "#TechNews",
+          "#AITools",
+          "#MachineLearning",
+          "#DeepLearning",
+          "#ChatGPT",
+          "#OpenAI",
+          "#TechTrends",
+          "#AIMarketing",
+          "#AIBusiness",
+          "#ContentCreator",
+          "#DigitalMarketing",
+          "#Automation",
+          "#FutureOfWork",
+          "#Innovation",
+          "#Technology",
+          "#AIRevolution",
+          "#Productivity",
+          "#AICreator",
+          "#SocialMediaMarketing",
+          "#Viral",
+          "#MustSee",
+          "#Breaking",
+          "#AIUpdates",
+          "#TechNews2024",
+          "#FutureTech",
+          "#SmartTech",
+          "#NextGen"
+        ],
+        "generated_at": "2026-05-29T14:12:59.148Z"
+      },
+      {
+        "post_id": "post_1780063980359_2",
+        "rank": 2,
+        "news_id": "fallback_001",
+        "headline": "OpenAI Launches GPT-5 with Unprecedented Reasoning",
+        "category": "Model Release",
+        "emoji": "🚀",
+        "slides": {
+          "slide_1": {
+            "label": "BREAKING",
+            "title": "OpenAI Launches GPT-5 with Unprecedented Reasoning",
+            "subtitle": "OpenAI has released GPT-5, featuring dramatically improved r..."
+          },
+          "slide_2": {
+            "title": "What Happened?",
+            "bullet_1": "OpenAI has released GPT-5, featuring dramatically improved reasoning capabilities and multimodal understanding",
+            "bullet_2": "OpenAI made a major announcement",
+            "bullet_3": "This changes everything for creators"
+          },
+          "slide_3": {
+            "title": "Why This Matters",
+            "impact_statement": "Redefines what AI can accomplish for businesses and creators worldwide.",
+            "detail": "AI is evolving faster than ever before.",
+            "stat_or_quote": "Viral Score: 10/10"
+          },
+          "slide_4": {
+            "title": "How You Can Use This",
+            "use_case_1": "🎨 Create better content faster",
+            "use_case_2": "💼 Automate your business tasks",
+            "use_case_3": "🚀 Stay ahead of the competition",
+            "pro_tip": "Start experimenting with this today!"
+          },
+          "slide_5": {
+            "title": "The Bottom Line",
+            "summary": "Redefines what AI can accomplish for businesses and creators worldwide.",
+            "cta_question": "Will you try this AI tool?",
+            "cta_action": "Save this for later 🔖"
+          }
+        },
+        "caption": {
+          "hook": "🚨 OpenAI Launches GPT-5 with Unprecedented Reasoning",
+          "body": "OpenAI has released GPT-5, featuring dramatically improved reasoning capabilities and multimodal understanding. The model shows a 50% improvement on benchmark tests.",
+          "engagement_prompt": "Would you use this AI tool? Comment below 👇",
+          "save_prompt": "Save this for your AI research 🔖",
+          "call_to_action": "Follow @aiinsider for daily AI updates 🤖",
+          "full_caption": "🚨 OpenAI Launches GPT-5 with Unprecedented Reasoning\n\nOpenAI has released GPT-5, featuring dramatically improved reasoning capabilities and multimodal understanding. The model shows a 50% improvement on benchmark tests.\n\nRedefines what AI can accomplish for businesses and creators worldwide.\n\nWould you use this? Comment below 👇\n\n#AI #ArtificialIntelligence #AINews #TechNews #AITools"
+        },
+        "hashtags": [
+          "#AI",
+          "#ArtificialIntelligence",
+          "#AINews",
+          "#TechNews",
+          "#AITools",
+          "#MachineLearning",
+          "#DeepLearning",
+          "#ChatGPT",
+          "#OpenAI",
+          "#TechTrends",
+          "#AIMarketing",
+          "#AIBusiness",
+          "#ContentCreator",
+          "#DigitalMarketing",
+          "#Automation",
+          "#FutureOfWork",
+          "#Innovation",
+          "#Technology",
+          "#AIRevolution",
+          "#Productivity",
+          "#AICreator",
+          "#SocialMediaMarketing",
+          "#Viral",
+          "#MustSee",
+          "#Breaking",
+          "#AIUpdates",
+          "#TechNews2024",
+          "#FutureTech",
+          "#SmartTech",
+          "#NextGen"
+        ],
+        "generated_at": "2026-05-29T14:13:00.359Z"
+      },
+      {
+        "post_id": "post_1780063981583_3",
+        "rank": 3,
+        "news_id": "fallback_003",
+        "headline": "Anthropic Claude 4 Beats All Models on Coding Tasks",
+        "category": "Model Release",
+        "emoji": "💻",
+        "slides": {
+          "slide_1": {
+            "label": "BREAKING",
+            "title": "Anthropic Claude 4 Beats All Models on Coding Tasks",
+            "subtitle": "Anthropic released Claude 4, which now outperforms all compe..."
+          },
+          "slide_2": {
+            "title": "What Happened?",
+            "bullet_1": "Anthropic released Claude 4, which now outperforms all competitors on coding benchmarks",
+            "bullet_2": "Anthropic made a major announcement",
+            "bullet_3": "This changes everything for creators"
+          },
+          "slide_3": {
+            "title": "Why This Matters",
+            "impact_statement": "Transforms software development by enabling AI to write entire codebases.",
+            "detail": "AI is evolving faster than ever before.",
+            "stat_or_quote": "Viral Score: 9/10"
+          },
+          "slide_4": {
+            "title": "How You Can Use This",
+            "use_case_1": "🎨 Create better content faster",
+            "use_case_2": "💼 Automate your business tasks",
+            "use_case_3": "🚀 Stay ahead of the competition",
+            "pro_tip": "Start experimenting with this today!"
+          },
+          "slide_5": {
+            "title": "The Bottom Line",
+            "summary": "Transforms software development by enabling AI to write entire codebases.",
+            "cta_question": "Will you try this AI tool?",
+            "cta_action": "Save this for later 🔖"
+          }
+        },
+        "caption": {
+          "hook": "🚨 Anthropic Claude 4 Beats All Models on Coding Tasks",
+          "body": "Anthropic released Claude 4, which now outperforms all competitors on coding benchmarks. The model can handle 500k context windows and write complete applications.",
+          "engagement_prompt": "Would you use this AI tool? Comment below 👇",
+          "save_prompt": "Save this for your AI research 🔖",
+          "call_to_action": "Follow @aiinsider for daily AI updates 🤖",
+          "full_caption": "🚨 Anthropic Claude 4 Beats All Models on Coding Tasks\n\nAnthropic released Claude 4, which now outperforms all competitors on coding benchmarks. The model can handle 500k context windows and write complete applications.\n\nTransforms software development by enabling AI to write entire codebases.\n\nWould you use this? Comment below 👇\n\n#AI #ArtificialIntelligence #AINews #TechNews #AITools"
+        },
+        "hashtags": [
+          "#AI",
+          "#ArtificialIntelligence",
+          "#AINews",
+          "#TechNews",
+          "#AITools",
+          "#MachineLearning",
+          "#DeepLearning",
+          "#ChatGPT",
+          "#OpenAI",
+          "#TechTrends",
+          "#AIMarketing",
+          "#AIBusiness",
+          "#ContentCreator",
+          "#DigitalMarketing",
+          "#Automation",
+          "#FutureOfWork",
+          "#Innovation",
+          "#Technology",
+          "#AIRevolution",
+          "#Productivity",
+          "#AICreator",
+          "#SocialMediaMarketing",
+          "#Viral",
+          "#MustSee",
+          "#Breaking",
+          "#AIUpdates",
+          "#TechNews2024",
+          "#FutureTech",
+          "#SmartTech",
+          "#NextGen"
+        ],
+        "generated_at": "2026-05-29T14:13:01.583Z"
+      },
+      {
+        "post_id": "post_1780063982775_4",
+        "rank": 4,
+        "news_id": "fallback_002",
+        "headline": "Google Gemini 2.0 Ultra Now Available for Everyone",
+        "category": "New Feature",
+        "emoji": "✨",
+        "slides": {
+          "slide_1": {
+            "label": "BREAKING",
+            "title": "Google Gemini 2.0 Ultra Now Available for Everyone",
+            "subtitle": "Google has opened access to its most powerful Gemini model t..."
+          },
+          "slide_2": {
+            "title": "What Happened?",
+            "bullet_1": "Google has opened access to its most powerful Gemini model to all users",
+            "bullet_2": "Google made a major announcement",
+            "bullet_3": "This changes everything for creators"
+          },
+          "slide_3": {
+            "title": "Why This Matters",
+            "impact_statement": "Puts enterprise-grade AI in the hands of everyday creators and businesses.",
+            "detail": "AI is evolving faster than ever before.",
+            "stat_or_quote": "Viral Score: 9/10"
+          },
+          "slide_4": {
+            "title": "How You Can Use This",
+            "use_case_1": "🎨 Create better content faster",
+            "use_case_2": "💼 Automate your business tasks",
+            "use_case_3": "🚀 Stay ahead of the competition",
+            "pro_tip": "Start experimenting with this today!"
+          },
+          "slide_5": {
+            "title": "The Bottom Line",
+            "summary": "Puts enterprise-grade AI in the hands of everyday creators and businesses.",
+            "cta_question": "Will you try this AI tool?",
+            "cta_action": "Save this for later 🔖"
+          }
+        },
+        "caption": {
+          "hook": "🚨 Google Gemini 2.0 Ultra Now Available for Everyone",
+          "body": "Google has opened access to its most powerful Gemini model to all users. The update includes real-time information, improved coding, and native video understanding.",
+          "engagement_prompt": "Would you use this AI tool? Comment below 👇",
+          "save_prompt": "Save this for your AI research 🔖",
+          "call_to_action": "Follow @aiinsider for daily AI updates 🤖",
+          "full_caption": "🚨 Google Gemini 2.0 Ultra Now Available for Everyone\n\nGoogle has opened access to its most powerful Gemini model to all users. The update includes real-time information, improved coding, and native video understanding.\n\nPuts enterprise-grade AI in the hands of everyday creators and businesses.\n\nWould you use this? Comment below 👇\n\n#AI #ArtificialIntelligence #AINews #TechNews #AITools"
+        },
+        "hashtags": [
+          "#AI",
+          "#ArtificialIntelligence",
+          "#AINews",
+          "#TechNews",
+          "#AITools",
+          "#MachineLearning",
+          "#DeepLearning",
+          "#ChatGPT",
+          "#OpenAI",
+          "#TechTrends",
+          "#AIMarketing",
+          "#AIBusiness",
+          "#ContentCreator",
+          "#DigitalMarketing",
+          "#Automation",
+          "#FutureOfWork",
+          "#Innovation",
+          "#Technology",
+          "#AIRevolution",
+          "#Productivity",
+          "#AICreator",
+          "#SocialMediaMarketing",
+          "#Viral",
+          "#MustSee",
+          "#Breaking",
+          "#AIUpdates",
+          "#TechNews2024",
+          "#FutureTech",
+          "#SmartTech",
+          "#NextGen"
+        ],
+        "generated_at": "2026-05-29T14:13:02.775Z"
+      },
+      {
+        "post_id": "post_1780063983948_5",
+        "rank": 5,
+        "news_id": "fallback_005",
+        "headline": "ElevenLabs Launches Real-Time Voice Cloning in 40 Languages",
+        "category": "New Feature",
+        "emoji": "🎙️",
+        "slides": {
+          "slide_1": {
+            "label": "BREAKING",
+            "title": "ElevenLabs Launches Real-Time Voice Cloning in 40 Languages",
+            "subtitle": "ElevenLabs released its most advanced voice cloning technolo..."
+          },
+          "slide_2": {
+            "title": "What Happened?",
+            "bullet_1": "ElevenLabs released its most advanced voice cloning technology supporting 40 languages with emotional nuance and real-time latency under 200ms",
+            "bullet_2": "ElevenLabs made a major announcement",
+            "bullet_3": "This changes everything for creators"
+          },
+          "slide_3": {
+            "title": "Why This Matters",
+            "impact_statement": "Enables global content creators to scale their voice content effortlessly.",
+            "detail": "AI is evolving faster than ever before.",
+            "stat_or_quote": "Viral Score: 8/10"
+          },
+          "slide_4": {
+            "title": "How You Can Use This",
+            "use_case_1": "🎨 Create better content faster",
+            "use_case_2": "💼 Automate your business tasks",
+            "use_case_3": "🚀 Stay ahead of the competition",
+            "pro_tip": "Start experimenting with this today!"
+          },
+          "slide_5": {
+            "title": "The Bottom Line",
+            "summary": "Enables global content creators to scale their voice content effortlessly.",
+            "cta_question": "Will you try this AI tool?",
+            "cta_action": "Save this for later 🔖"
+          }
+        },
+        "caption": {
+          "hook": "🚨 ElevenLabs Launches Real-Time Voice Cloning in 40 Languages",
+          "body": "ElevenLabs released its most advanced voice cloning technology supporting 40 languages with emotional nuance and real-time latency under 200ms.",
+          "engagement_prompt": "Would you use this AI tool? Comment below 👇",
+          "save_prompt": "Save this for your AI research 🔖",
+          "call_to_action": "Follow @aiinsider for daily AI updates 🤖",
+          "full_caption": "🚨 ElevenLabs Launches Real-Time Voice Cloning in 40 Languages\n\nElevenLabs released its most advanced voice cloning technology supporting 40 languages with emotional nuance and real-time latency under 200ms.\n\nEnables global content creators to scale their voice content effortlessly.\n\nWould you use this? Comment below 👇\n\n#AI #ArtificialIntelligence #AINews #TechNews #AITools"
+        },
+        "hashtags": [
+          "#AI",
+          "#ArtificialIntelligence",
+          "#AINews",
+          "#TechNews",
+          "#AITools",
+          "#MachineLearning",
+          "#DeepLearning",
+          "#ChatGPT",
+          "#OpenAI",
+          "#TechTrends",
+          "#AIMarketing",
+          "#AIBusiness",
+          "#ContentCreator",
+          "#DigitalMarketing",
+          "#Automation",
+          "#FutureOfWork",
+          "#Innovation",
+          "#Technology",
+          "#AIRevolution",
+          "#Productivity",
+          "#AICreator",
+          "#SocialMediaMarketing",
+          "#Viral",
+          "#MustSee",
+          "#Breaking",
+          "#AIUpdates",
+          "#TechNews2024",
+          "#FutureTech",
+          "#SmartTech",
+          "#NextGen"
+        ],
+        "generated_at": "2026-05-29T14:13:03.948Z"
+      }
+    ],
+    "generated_at": "2026-05-29T14:13:03.948Z",
+    "total_posts": 5
+  },
+  "carousels": [
+    {
+      "post_id": "post_1780063979148_1",
+      "rank": 1,
+      "headline": "Midjourney V7 Generates Photorealistic Videos Now",
+      "image_paths": [
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\post_1780063979148_1\\slide_1.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\post_1780063979148_1\\slide_2.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\post_1780063979148_1\\slide_3.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\post_1780063979148_1\\slide_4.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\post_1780063979148_1\\slide_5.png"
+      ],
+      "rendered_at": "2026-05-29T14:13:04.994Z"
+    },
+    {
+      "post_id": "post_1780063980359_2",
+      "rank": 2,
+      "headline": "OpenAI Launches GPT-5 with Unprecedented Reasoning",
+      "image_paths": [
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\post_1780063980359_2\\slide_1.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\post_1780063980359_2\\slide_2.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\post_1780063980359_2\\slide_3.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\post_1780063980359_2\\slide_4.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\post_1780063980359_2\\slide_5.png"
+      ],
+      "rendered_at": "2026-05-29T14:13:06.101Z"
+    },
+    {
+      "post_id": "post_1780063981583_3",
+      "rank": 3,
+      "headline": "Anthropic Claude 4 Beats All Models on Coding Tasks",
+      "image_paths": [
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\post_1780063981583_3\\slide_1.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\post_1780063981583_3\\slide_2.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\post_1780063981583_3\\slide_3.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\post_1780063981583_3\\slide_4.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\post_1780063981583_3\\slide_5.png"
+      ],
+      "rendered_at": "2026-05-29T14:13:07.194Z"
+    },
+    {
+      "post_id": "post_1780063982775_4",
+      "rank": 4,
+      "headline": "Google Gemini 2.0 Ultra Now Available for Everyone",
+      "image_paths": [
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\post_1780063982775_4\\slide_1.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\post_1780063982775_4\\slide_2.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\post_1780063982775_4\\slide_3.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\post_1780063982775_4\\slide_4.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\post_1780063982775_4\\slide_5.png"
+      ],
+      "rendered_at": "2026-05-29T14:13:08.354Z"
+    },
+    {
+      "post_id": "post_1780063983948_5",
+      "rank": 5,
+      "headline": "ElevenLabs Launches Real-Time Voice Cloning in 40 Languages",
+      "image_paths": [
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\post_1780063983948_5\\slide_1.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\post_1780063983948_5\\slide_2.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\post_1780063983948_5\\slide_3.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\post_1780063983948_5\\slide_4.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\post_1780063983948_5\\slide_5.png"
+      ],
+      "rendered_at": "2026-05-29T14:13:09.703Z"
+    }
+  ],
+  "publishing": [
+    {
+      "post_id": "post_1780063979148_1",
+      "rank": 1,
+      "headline": "Midjourney V7 Generates Photorealistic Videos Now",
+      "status": "preview",
+      "preview_mode": true,
+      "instagram_post_id": "PREVIEW_post_1780063979148_1",
+      "published_at": "2026-05-29T14:13:10.218Z",
+      "error": null
+    },
+    {
+      "post_id": "post_1780063980359_2",
+      "rank": 2,
+      "headline": "OpenAI Launches GPT-5 with Unprecedented Reasoning",
+      "status": "preview",
+      "preview_mode": true,
+      "instagram_post_id": "PREVIEW_post_1780063980359_2",
+      "published_at": "2026-05-29T14:13:11.233Z",
+      "error": null
+    },
+    {
+      "post_id": "post_1780063981583_3",
+      "rank": 3,
+      "headline": "Anthropic Claude 4 Beats All Models on Coding Tasks",
+      "status": "preview",
+      "preview_mode": true,
+      "instagram_post_id": "PREVIEW_post_1780063981583_3",
+      "published_at": "2026-05-29T14:13:12.260Z",
+      "error": null
+    },
+    {
+      "post_id": "post_1780063982775_4",
+      "rank": 4,
+      "headline": "Google Gemini 2.0 Ultra Now Available for Everyone",
+      "status": "preview",
+      "preview_mode": true,
+      "instagram_post_id": "PREVIEW_post_1780063982775_4",
+      "published_at": "2026-05-29T14:13:13.275Z",
+      "error": null
+    },
+    {
+      "post_id": "post_1780063983948_5",
+      "rank": 5,
+      "headline": "ElevenLabs Launches Real-Time Voice Cloning in 40 Languages",
+      "status": "preview",
+      "preview_mode": true,
+      "instagram_post_id": "PREVIEW_post_1780063983948_5",
+      "published_at": "2026-05-29T14:13:14.287Z",
+      "error": null
+    }
+  ],
+  "analytics": {
+    "total_posts": 20,
+    "total_likes": 6391,
+    "total_comments": 542,
+    "total_saves": 2020,
+    "total_reach": 53973,
+    "avg_engagement": "4.98",
+    "best_post": "OpenAI Launches GPT-5 with Unprecedented Reasoning",
+    "by_category": {
+      "Model Release": 8,
+      "New Feature": 8,
+      "Tool Launch": 4
+    },
+    "computed_at": "2026-05-29T14:13:14.301Z"
+  },
+  "completed_at": "2026-05-29T14:13:14.305Z"
+}

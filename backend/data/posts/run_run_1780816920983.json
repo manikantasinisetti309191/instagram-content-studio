@@ -1,0 +1,265 @@
+{
+  "run_id": "run_1780816920983",
+  "started_at": "2026-06-07T07:22:00.983Z",
+  "status": "success",
+  "research": {
+    "news_items": [
+      {
+        "id": "fallback_001",
+        "headline": "OpenAI Launches GPT-5 with Unprecedented Reasoning",
+        "summary": "OpenAI has released GPT-5, featuring dramatically improved reasoning capabilities and multimodal understanding. The model shows a 50% improvement on benchmark tests.",
+        "source": "OpenAI",
+        "impact": "Redefines what AI can accomplish for businesses and creators worldwide.",
+        "viral_score": 10,
+        "relevance_score": 10,
+        "innovation_score": 9,
+        "category": "Model Release",
+        "emoji": "🚀",
+        "researched_at": "2026-06-07T07:22:31.193Z"
+      },
+      {
+        "id": "fallback_002",
+        "headline": "Google Gemini 2.0 Ultra Now Available for Everyone",
+        "summary": "Google has opened access to its most powerful Gemini model to all users. The update includes real-time information, improved coding, and native video understanding.",
+        "source": "Google",
+        "impact": "Puts enterprise-grade AI in the hands of everyday creators and businesses.",
+        "viral_score": 9,
+        "relevance_score": 9,
+        "innovation_score": 8,
+        "category": "New Feature",
+        "emoji": "✨",
+        "researched_at": "2026-06-07T07:22:31.193Z"
+      },
+      {
+        "id": "fallback_003",
+        "headline": "Anthropic Claude 4 Beats All Models on Coding Tasks",
+        "summary": "Anthropic released Claude 4, which now outperforms all competitors on coding benchmarks. The model can handle 500k context windows and write complete applications.",
+        "source": "Anthropic",
+        "impact": "Transforms software development by enabling AI to write entire codebases.",
+        "viral_score": 9,
+        "relevance_score": 10,
+        "innovation_score": 9,
+        "category": "Model Release",
+        "emoji": "💻",
+        "researched_at": "2026-06-07T07:22:31.193Z"
+      },
+      {
+        "id": "fallback_004",
+        "headline": "Midjourney V7 Generates Photorealistic Videos Now",
+        "summary": "Midjourney has launched V7 with integrated video generation capabilities. Users can now create 30-second photorealistic videos from text prompts directly in Discord.",
+        "source": "Midjourney",
+        "impact": "Democratizes professional video production for creators and businesses.",
+        "viral_score": 10,
+        "relevance_score": 10,
+        "innovation_score": 10,
+        "category": "Tool Launch",
+        "emoji": "🎬",
+        "researched_at": "2026-06-07T07:22:31.193Z"
+      },
+      {
+        "id": "fallback_005",
+        "headline": "ElevenLabs Launches Real-Time Voice Cloning in 40 Languages",
+        "summary": "ElevenLabs released its most advanced voice cloning technology supporting 40 languages with emotional nuance and real-time latency under 200ms.",
+        "source": "ElevenLabs",
+        "impact": "Enables global content creators to scale their voice content effortlessly.",
+        "viral_score": 8,
+        "relevance_score": 9,
+        "innovation_score": 8,
+        "category": "New Feature",
+        "emoji": "🎙️",
+        "researched_at": "2026-06-07T07:22:31.193Z"
+      }
+    ],
+    "research_date": "2026-06-07T07:22:31.193Z",
+    "total_items": 5
+  },
+  "filter": {
+    "selected_items": [
+      {
+        "id": "fallback_004",
+        "headline": "Midjourney V7 Generates Photorealistic Videos Now",
+        "summary": "Midjourney has launched V7 with integrated video generation capabilities. Users can now create 30-second photorealistic videos from text prompts directly in Discord.",
+        "source": "Midjourney",
+        "impact": "Democratizes professional video production for creators and businesses.",
+        "viral_score": 10,
+        "relevance_score": 10,
+        "innovation_score": 10,
+        "category": "Tool Launch",
+        "emoji": "🎬",
+        "researched_at": "2026-06-07T07:22:31.193Z",
+        "final_score": 10,
+        "rank": 1,
+        "selection_reason": "Auto-selected based on score",
+        "instagram_angle": "Breaking: Midjourney V7 Generates Photorealistic Videos Now"
+      }
+    ],
+    "filter_date": "2026-06-07T07:23:00.283Z",
+    "total_evaluated": 5
+  },
+  "content": {
+    "posts": [
+      {
+        "post_id": "learnwithmanii_mj_v7_video_001",
+        "rank": 1,
+        "news_id": "fallback_004",
+        "headline": "Midjourney V7 Generates Photorealistic Videos Now",
+        "category": "Tool Launch",
+        "emoji": "🎬",
+        "slides": {
+          "slide_1": {
+            "label": "BREAKING",
+            "title": "Midjourney V7: Videos From Text!",
+            "subtitle": "Create stunning photorealistic videos directly from prompts."
+          },
+          "slide_2": {
+            "title": "Here's What Happened",
+            "bullet_1": "Midjourney V7 now generates photorealistic videos.",
+            "bullet_2": "From text prompts, directly inside Discord.",
+            "bullet_3": "Get up to 30-second pro-quality clips."
+          },
+          "slide_3": {
+            "title": "What Is AI Video Generation Anyway?",
+            "simple_explanation": "It's like telling an AI exactly what you want to see, and it creates a video from scratch. No cameras needed, just your words!",
+            "analogy": "Imagine asking an artist to paint a moving picture based on your description."
+          },
+          "slide_4": {
+            "title": "Why YOU Should Care",
+            "impact_statement": "This makes pro-level video creation accessible to everyone.",
+            "for_students": "Bring your presentations and projects to life easily.",
+            "for_employees": "Create engaging internal comms or training videos.",
+            "for_business": "Produce marketing videos or product demos fast."
+          },
+          "slide_5": {
+            "title": "How It Actually Works",
+            "step_1": "You type a detailed text prompt in Discord.",
+            "step_2": "Midjourney's AI interprets your words and vision.",
+            "step_3": "It then generates a high-quality, photorealistic video.",
+            "fun_fact": "The AI understands context and style from your prompt!"
+          },
+          "slide_6": {
+            "title": "How YOU Can Use This Today",
+            "use_case_1": "Students: Visualizing complex concepts for school.",
+            "use_case_2": "Employees: Explainer videos for work projects.",
+            "use_case_3": "Businesses: Quick social media ad campaigns.",
+            "use_case_4": "Creators: Short films, music video clips, art projects."
+          },
+          "slide_7": {
+            "title": "The Good and The Not-So-Good",
+            "pro_1": "Incredibly photorealistic video quality.",
+            "pro_2": "Super easy to use with simple text prompts.",
+            "con_1": "Videos are currently limited to 30 seconds.",
+            "con_2": "Still requires some prompt engineering skill."
+          },
+          "slide_8": {
+            "title": "The Bigger Picture",
+            "context": "This launch pushes AI video generation further, making high-quality output available to everyday users, not just experts. It's a huge step for creative freedom.",
+            "vs_before": "Video production needed cameras, studios, editing software.",
+            "vs_now": "Your ideas + text prompt = professional video in minutes."
+          },
+          "slide_9": {
+            "title": "Pro Tips to Get Started",
+            "tip_1": "Be super specific with your prompts for best results.",
+            "tip_2": "Experiment with different artistic styles and keywords.",
+            "tip_3": "Use negative prompts to exclude unwanted elements.",
+            "bonus_tip": "Combine with image prompts for consistent visual themes!"
+          },
+          "slide_10": {
+            "title": "The Bottom Line",
+            "summary": "Midjourney V7 is a game-changer for accessible video creation.",
+            "cta_question": "What's the first video you'll create?",
+            "cta_follow": "Follow @learnwithmanii for daily AI lessons like this 🤖",
+            "cta_save": "Save this — you'll need it later 🔖"
+          }
+        },
+        "caption": {
+          "hook": "Midjourney V7 just unlocked photorealistic video creation! 🤯",
+          "body": "Big news for creators, students, and businesses! Midjourney V7 now lets you create stunning, photorealistic videos directly from text prompts. Forget complex software – your imagination is the only limit.\n\nThis isn't just a small update; it's a massive leap forward. Imagine generating a 30-second, high-quality video for your project, presentation, or next marketing campaign in minutes, all within Discord.\n\nIt democratizes professional video production, putting a powerful tool in *your* hands. Whether you're a student visualizing a concept or a business owner crafting an ad, this changes everything.",
+          "engagement_prompt": "If you could create any 30-second video, what would it be about? Drop your ideas below! 👇",
+          "save_prompt": "Save this post to remember how you can easily tap into AI video generation for your next project!",
+          "call_to_action": "Follow @learnwithmanii for more simple AI breakdowns and tag a friend who needs to level up their video game!",
+          "full_caption": "Midjourney V7 just unlocked photorealistic video creation! 🤯\n\nBig news for creators, students, and businesses! Midjourney V7 now lets you create stunning, photorealistic videos directly from text prompts. Forget complex software – your imagination is the only limit.\n\nThis isn't just a small update; it's a massive leap forward. Imagine generating a 30-second, high-quality video for your project, presentation, or next marketing campaign in minutes, all within Discord.\n\nIt democratizes professional video production, putting a powerful tool in *your* hands. Whether you're a student visualizing a concept or a business owner crafting an ad, this changes everything.\n\nIf you could create any 30-second video, what would it be about? Drop your ideas below! 👇\n\nSave this post to remember how you can easily tap into AI video generation for your next project!\n\nFollow @learnwithmanii for more simple AI breakdowns and tag a friend who needs to level up their video game!"
+        },
+        "hashtags": [
+          "#LearnAI",
+          "#AIForBeginners",
+          "#AIForStudents",
+          "#AILearning",
+          "#LearnWithAI",
+          "#AIEducation",
+          "#TechForStudents",
+          "#LearnTech",
+          "#AIForBusiness",
+          "#AITools",
+          "#WorkWithAI",
+          "#AIProductivity",
+          "#FutureOfWork",
+          "#CareerGrowth",
+          "#TechProfessionals",
+          "#MidjourneyV7",
+          "#AIVideo",
+          "#GenerativeAI",
+          "#TextToVideo",
+          "#CreativeAI",
+          "#ArtificialIntelligence",
+          "#AINews",
+          "#TechNews",
+          "#AI2025",
+          "#MachineLearning"
+        ],
+        "generated_at": "2026-06-07T07:23:15.411Z"
+      }
+    ],
+    "generated_at": "2026-06-07T07:23:15.411Z",
+    "total_posts": 1
+  },
+  "carousels": [
+    {
+      "post_id": "learnwithmanii_mj_v7_video_001",
+      "rank": 1,
+      "headline": "Midjourney V7 Generates Photorealistic Videos Now",
+      "image_paths": [
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\learnwithmanii_mj_v7_video_001\\slide_1.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\learnwithmanii_mj_v7_video_001\\slide_2.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\learnwithmanii_mj_v7_video_001\\slide_3.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\learnwithmanii_mj_v7_video_001\\slide_4.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\learnwithmanii_mj_v7_video_001\\slide_5.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\learnwithmanii_mj_v7_video_001\\slide_6.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\learnwithmanii_mj_v7_video_001\\slide_7.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\learnwithmanii_mj_v7_video_001\\slide_8.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\learnwithmanii_mj_v7_video_001\\slide_9.png",
+        "C:\\Users\\sadha\\Desktop\\Antigravity2.0\\Instagram\\backend\\data\\images\\learnwithmanii_mj_v7_video_001\\slide_10.png"
+      ],
+      "rendered_at": "2026-06-07T07:23:18.683Z"
+    }
+  ],
+  "publishing": [
+    {
+      "post_id": "learnwithmanii_mj_v7_video_001",
+      "rank": 1,
+      "headline": "Midjourney V7 Generates Photorealistic Videos Now",
+      "status": "published",
+      "preview_mode": false,
+      "instagram_post_id": "17953840356144094",
+      "published_at": "2026-06-07T07:24:56.117Z",
+      "error": null
+    }
+  ],
+  "analytics": {
+    "total_posts": 73,
+    "total_likes": 5915,
+    "total_comments": 420,
+    "total_saves": 2051,
+    "total_reach": 55006,
+    "avg_engagement": "2.81",
+    "best_post": "Midjourney V7 Generates Photorealistic Videos Now",
+    "by_category": {
+      "Tool Launch": 6,
+      "New Feature": 8,
+      "Model Release": 8,
+      "AI Coding Assistants & Developer Tools": 1,
+      "AI Tool": 2
+    },
+    "computed_at": "2026-06-07T07:24:57.145Z"
+  },
+  "completed_at": "2026-06-07T07:24:57.154Z"
+}
