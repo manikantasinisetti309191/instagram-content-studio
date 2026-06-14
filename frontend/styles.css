@@ -939,7 +939,9 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 40px 24px calc(40px + var(--safe-bottom));
   gap: 14px;
   text-align: center;
@@ -992,6 +994,170 @@ body {
   box-shadow: 0 6px 20px rgba(224,48,108,0.4);
 }
 .success-link-btn:active { opacity: 0.85; }
+
+/* ==================== PRE-PUBLISH REMINDER ==================== */
+.pre-publish-reminder {
+  width: 100%;
+  background: rgba(0, 212, 255, 0.05);
+  border: 1px solid rgba(0, 212, 255, 0.18);
+  border-radius: 14px;
+  padding: 14px 14px 10px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pre-publish-reminder-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--cyan);
+  text-transform: uppercase;
+}
+.pre-publish-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.pre-publish-item-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.pre-publish-item-body {
+  flex: 1;
+}
+.pre-publish-item-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 2px;
+}
+.pre-publish-item-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+/* ==================== POST-PUBLISH CHECKLIST ==================== */
+.post-publish-checklist {
+  width: 100%;
+  max-width: 360px;
+  background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(0,212,255,0.05));
+  border: 1px solid rgba(124,58,237,0.25);
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+}
+.ppc-title {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  color: var(--purple-light);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+.ppc-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  transition: background 0.2s;
+}
+.ppc-step:active { background: rgba(124,58,237,0.1); }
+.ppc-step-final {
+  background: rgba(0,255,136,0.04);
+  border-color: rgba(0,255,136,0.15);
+}
+.ppc-step-num {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--purple), var(--cyan));
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.ppc-step-num-done {
+  background: linear-gradient(135deg, var(--green), #00b4d8);
+}
+.ppc-step-body { flex: 1; min-width: 0; }
+.ppc-step-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+.ppc-step-sub {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: -2px;
+  margin-bottom: 6px;
+}
+.ppc-collab-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 4px;
+}
+.ppc-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(124,58,237,0.15);
+  border: 1px solid rgba(124,58,237,0.3);
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--purple-light);
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+.ppc-tag:active {
+  background: rgba(124,58,237,0.35);
+  transform: scale(0.97);
+}
+.ppc-tag-music {
+  background: rgba(0, 212, 255, 0.1);
+  border-color: rgba(0, 212, 255, 0.3);
+  color: var(--cyan);
+}
+.ppc-tag-music:active { background: rgba(0,212,255,0.25); }
+.ppc-copy-hint {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  opacity: 0.6;
+  background: rgba(255,255,255,0.1);
+  padding: 1px 5px;
+  border-radius: 6px;
+}
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 /* ==================== TEXT SLIDE STYLES ==================== */
 .ts-label {

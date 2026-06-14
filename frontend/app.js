@@ -912,10 +912,12 @@ function showPublishSuccess(igPostId, headline) {
   const overlay = document.getElementById('successOverlay');
   if (!overlay) return;
 
+  const checklist = document.getElementById('postPublishChecklist');
+
   if (isPreview) {
     // Instagram is NOT configured — show honest error, not fake success
     setStatusPill('error', '⚠️ Not Published');
-    const icon = overlay.querySelector('.success-icon');
+    const icon = overlay.querySelector('.success-confetti');
     if (icon) icon.textContent = '⚠️';
     const title = overlay.querySelector('.success-title');
     if (title) { title.textContent = 'Instagram Not Connected'; title.style.color = '#ff8080'; }
@@ -925,10 +927,12 @@ function showPublishSuccess(igPostId, headline) {
     if (linkBtn) linkBtn.style.display = 'none';
     const pubBtn = document.getElementById('publishBtn');
     if (pubBtn) { pubBtn.innerHTML = '<span>⚠️</span><span>Not Connected</span>'; pubBtn.disabled = false; pubBtn.className = 'action-btn secondary'; }
+    // Hide checklist in preview mode
+    if (checklist) checklist.style.display = 'none';
   } else {
     // Real publish — show proper success
     setStatusPill('done', '✓ Published!');
-    const icon = overlay.querySelector('.success-icon');
+    const icon = overlay.querySelector('.success-confetti');
     if (icon) icon.textContent = '🎉';
     const title = overlay.querySelector('.success-title');
     if (title) { title.textContent = 'Published!'; title.style.color = '#00ff88'; }
@@ -940,14 +944,28 @@ function showPublishSuccess(igPostId, headline) {
     if (pubBtn) { pubBtn.innerHTML = '<span>✅</span><span>Published!</span>'; pubBtn.disabled = true; pubBtn.className = 'action-btn secondary'; }
     const badge = document.getElementById('reviewPostBadge');
     if (badge) { badge.textContent = 'Published'; badge.className = 'review-badge published'; }
+    // Show checklist with animation
+    if (checklist) { checklist.style.display = ''; checklist.style.animation = 'fadeSlideUp 0.5s ease 0.3s both'; }
   }
   overlay.classList.remove('hidden');
 }
 
 window.closeSuccessOverlay = function() {
   document.getElementById('successOverlay')?.classList.add('hidden');
+  // Reset checklist visibility for next time
+  const checklist = document.getElementById('postPublishChecklist');
+  if (checklist) { checklist.style.display = ''; checklist.style.animation = ''; }
   showScreen('home');
   loadLatestPost();
+};
+
+// ==================== COPY PPC TEXT (Post-Publish Checklist) ====================
+window.copyPpcText = function(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    showToast(`✅ Copied: ${text}`, 'success', 2000);
+  }).catch(() => {
+    showToast('Could not copy — long-press to select manually', 'error');
+  });
 };
 
 // ==================== COPY ====================

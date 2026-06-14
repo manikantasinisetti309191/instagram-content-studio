@@ -235,12 +235,20 @@ app.get('/api/history', (req, res) => {
     const { status = 'all', limit = 50 } = req.query;
     let posts = readAllRunPosts();
 
-    // Deduplicate by headline (keep the one with published status if exists)
+    // Deduplicate: use headline as the content identity key.
+    // Old runs generated 5 posts with the same fallback headlines under different post_ids.
+    // Keep the entry with the best status (published > preview/draft > failed).
+    const STATUS_RANK = { published: 3, preview: 2, draft: 1, failed: 0 };
     const seen = new Map();
     for (const p of posts) {
-      const key = p.headline;
-      if (!seen.has(key) || p.display_status === 'published') {
+      const key = (p.headline || '').toLowerCase().trim();
+      const existing = seen.get(key);
+      if (!existing) {
         seen.set(key, p);
+      } else {
+        const existRank = STATUS_RANK[existing.display_status] ?? 0;
+        const newRank   = STATUS_RANK[p.display_status] ?? 0;
+        if (newRank > existRank) seen.set(key, p);
       }
     }
     posts = Array.from(seen.values());
@@ -257,22 +265,21 @@ app.get('/api/history', (req, res) => {
       return new Date(b.published_at || b.run_started_at || 0) - new Date(a.published_at || a.run_started_at || 0);
     });
 
-    const all = readAllRunPosts();
-    const totalGenerated = new Map();
-    all.forEach(p => totalGenerated.set(p.headline, true));
-    const totalPublished = all.filter(p => p.display_status === 'published').length;
+    // Stats — computed from deduplicated set
+    const allDeduped = Array.from(seen.values());
     const today = new Date().toISOString().split('T')[0];
-    const todayCount = all.filter(p => (p.published_at || '').startsWith(today)).length;
+    const totalPublished = allDeduped.filter(p => p.display_status === 'published').length;
+    const todayCount = allDeduped.filter(p => (p.published_at || '').startsWith(today)).length;
 
     res.json({
       posts: posts.slice(0, parseInt(limit)),
       total: posts.length,
       stats: {
-        generated: totalGenerated.size,
+        generated: allDeduped.length,
         published: totalPublished,
         today: todayCount,
-        drafts: all.filter(p => p.display_status === 'draft').length,
-        failed: all.filter(p => p.display_status === 'failed').length
+        drafts: allDeduped.filter(p => p.display_status === 'draft').length,
+        failed: allDeduped.filter(p => p.display_status === 'failed').length
       }
     });
   } catch (error) {
@@ -797,13 +804,19 @@ app.post('/api/posts/:postId/approve', async (req, res) => {
   const { postId } = req.params;
 
   try {
-    // Find the post file containing this postId
-    const files = fs.readdirSync(POSTS_DIR).filter(f => f.endsWith('.json') && !f.startsWith('run_'));
+    // Search ALL json files (run_run_*.json first as they are newest, then legacy date files)
+    // excluding only quality_ report files
+    const allFiles = fs.readdirSync(POSTS_DIR)
+      .filter(f => f.endsWith('.json') && !f.startsWith('quality_'))
+      .map(f => ({ f, mtime: fs.statSync(path.join(POSTS_DIR, f)).mtimeMs }))
+      .sort((a, b) => b.mtime - a.mtime)  // newest first
+      .map(o => o.f);
+
     let targetFile = null;
     let targetData = null;
     let targetPost = null;
 
-    for (const file of files) {
+    for (const file of allFiles) {
       try {
         const data = JSON.parse(fs.readFileSync(path.join(POSTS_DIR, file), 'utf-8'));
         const post = data.content?.posts?.find(p => p.post_id === postId);

@@ -408,6 +408,26 @@
       <div class="confirm-icon">🚀</div>
       <div class="confirm-title">Publish to Instagram?</div>
       <div class="confirm-sub">This will post to <strong>@learnwithmanii</strong> right now. This cannot be undone.</div>
+
+      <!-- Pre-publish reminder: Collaborators + Audio -->
+      <div class="pre-publish-reminder">
+        <div class="pre-publish-reminder-title">📋 After publishing, you'll need to add in the app:</div>
+        <div class="pre-publish-item">
+          <span class="pre-publish-item-icon">👥</span>
+          <div class="pre-publish-item-body">
+            <div class="pre-publish-item-label">Collaborators</div>
+            <div class="pre-publish-item-val">@sinisetti_manikanta &amp; @sadhanamanikanta</div>
+          </div>
+        </div>
+        <div class="pre-publish-item">
+          <span class="pre-publish-item-icon">🎵</span>
+          <div class="pre-publish-item-body">
+            <div class="pre-publish-item-label">Audio / Music</div>
+            <div class="pre-publish-item-val">Inner Peace</div>
+          </div>
+        </div>
+      </div>
+
       <button id="confirmPublishBtn" class="confirm-btn primary" onclick="submitPublish()">Yes, Publish Now</button>
       <button class="confirm-btn ghost" onclick="closePublishConfirm()">Cancel</button>
     </div>
@@ -426,8 +446,50 @@
       <a id="successLinkBtn" class="success-link-btn" target="_blank" rel="noopener">
         🔗 View on Instagram
       </a>
+
+      <!-- Post-publish checklist: Collaborators + Audio -->
+      <div class="post-publish-checklist" id="postPublishChecklist">
+        <div class="ppc-title">⚡ Complete your post in Instagram app:</div>
+
+        <div class="ppc-step">
+          <div class="ppc-step-num">1</div>
+          <div class="ppc-step-body">
+            <div class="ppc-step-label">Open Instagram → find your post → tap <strong>···</strong></div>
+            <div class="ppc-step-sub">Tap <em>"Edit"</em> on the published post</div>
+          </div>
+        </div>
+
+        <div class="ppc-step">
+          <div class="ppc-step-num">2</div>
+          <div class="ppc-step-body">
+            <div class="ppc-step-label">Add Collaborators 👥</div>
+            <div class="ppc-collab-tags">
+              <span class="ppc-tag" onclick="copyPpcText('@sinisetti_manikanta')">@sinisetti_manikanta <span class="ppc-copy-hint">tap to copy</span></span>
+              <span class="ppc-tag" onclick="copyPpcText('@sadhanamanikanta')">@sadhanamanikanta <span class="ppc-copy-hint">tap to copy</span></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ppc-step">
+          <div class="ppc-step-num">3</div>
+          <div class="ppc-step-body">
+            <div class="ppc-step-label">Add Audio / Music 🎵</div>
+            <div class="ppc-collab-tags">
+              <span class="ppc-tag ppc-tag-music" onclick="copyPpcText('Inner Peace')">🎵 Inner Peace <span class="ppc-copy-hint">tap to copy</span></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ppc-step ppc-step-final">
+          <div class="ppc-step-num ppc-step-num-done">✓</div>
+          <div class="ppc-step-body">
+            <div class="ppc-step-label">Tap <strong>Done</strong> — your post is fully complete! 🎊</div>
+          </div>
+        </div>
+      </div>
+
       <button class="confirm-btn primary" onclick="closeSuccessOverlay()" style="margin-top:8px">
-        Done
+        Got It — Done!
       </button>
     </div>
   </div>

@@ -178,20 +178,32 @@ async function regeneratePost(excludeTopics = []) {
 function loadLatestPostFile() {
   if (!fs.existsSync(POSTS_DIR)) return null;
 
-  const files = fs.readdirSync(POSTS_DIR)
+  // Primary: read run_run_*.json files sorted by modification time (newest first).
+  // These are written by the current pipeline on every generate.
+  const runFiles = fs.readdirSync(POSTS_DIR)
+    .filter(f => f.startsWith('run_') && f.endsWith('.json') && !f.startsWith('quality_'))
+    .map(f => ({ f, mtime: fs.statSync(path.join(POSTS_DIR, f)).mtimeMs }))
+    .sort((a, b) => b.mtime - a.mtime)
+    .map(o => o.f);
+
+  // Fallback: old YYYY-MM-DD.json date files (legacy)
+  const dateFiles = fs.readdirSync(POSTS_DIR)
     .filter(f => f.endsWith('.json') && !f.startsWith('run_') && !f.startsWith('quality_'))
     .sort()
     .reverse();
 
-  if (files.length === 0) return null;
+  const candidates = [...runFiles, ...dateFiles];
+  if (candidates.length === 0) return null;
 
-  const filePath = path.join(POSTS_DIR, files[0]);
-  try {
-    const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-    return { filePath, data };
-  } catch {
-    return null;
+  for (const file of candidates) {
+    const filePath = path.join(POSTS_DIR, file);
+    try {
+      const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+      // Must have actual post content
+      if (data.content?.posts?.length > 0) return { filePath, data };
+    } catch { /* skip unreadable */ }
   }
+  return null;
 }
 
 module.exports = { editContent, regeneratePost, loadLatestPostFile };
