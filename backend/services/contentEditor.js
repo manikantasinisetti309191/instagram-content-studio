@@ -178,32 +178,36 @@ async function regeneratePost(excludeTopics = []) {
 function loadLatestPostFile() {
   if (!fs.existsSync(POSTS_DIR)) return null;
 
-  // Primary: read run_run_*.json files sorted by modification time (newest first).
-  // These are written by the current pipeline on every generate.
+  // Primary: read run_run_*.json files
   const runFiles = fs.readdirSync(POSTS_DIR)
-    .filter(f => f.startsWith('run_') && f.endsWith('.json') && !f.startsWith('quality_'))
-    .map(f => ({ f, mtime: fs.statSync(path.join(POSTS_DIR, f)).mtimeMs }))
-    .sort((a, b) => b.mtime - a.mtime)
-    .map(o => o.f);
+    .filter(f => f.startsWith('run_') && f.endsWith('.json') && !f.startsWith('quality_'));
 
   // Fallback: old YYYY-MM-DD.json date files (legacy)
   const dateFiles = fs.readdirSync(POSTS_DIR)
-    .filter(f => f.endsWith('.json') && !f.startsWith('run_') && !f.startsWith('quality_'))
-    .sort()
-    .reverse();
+    .filter(f => f.endsWith('.json') && !f.startsWith('run_') && !f.startsWith('quality_'));
 
   const candidates = [...runFiles, ...dateFiles];
   if (candidates.length === 0) return null;
 
+  const validPosts = [];
   for (const file of candidates) {
     const filePath = path.join(POSTS_DIR, file);
     try {
       const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-      // Must have actual post content
-      if (data.content?.posts?.length > 0) return { filePath, data };
+      if (data.content?.posts?.length > 0) {
+        // Find the actual generation time for reliable sorting
+        const timeStr = data.completed_at || data.started_at || data.content?.posts[0]?.generated_at || '1970-01-01T00:00:00Z';
+        validPosts.push({ filePath, data, time: new Date(timeStr).getTime() });
+      }
     } catch { /* skip unreadable */ }
   }
-  return null;
+
+  if (validPosts.length === 0) return null;
+
+  // Sort by true generation time (newest first) instead of filesystem mtime
+  validPosts.sort((a, b) => b.time - a.time);
+
+  return { filePath: validPosts[0].filePath, data: validPosts[0].data };
 }
 
 module.exports = { editContent, regeneratePost, loadLatestPostFile };

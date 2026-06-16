@@ -382,10 +382,28 @@ async function runPipeline(options = {}) {
       updateStep('analytics', 'complete');
       log('✅ Analytics recorded', 'success');
 
-      pipelineState.status = 'idle';
-      pipelineState.currentStep = null;
+      // ─── SAVE RUN FILE (preview) ─────────────────────────────────
       pipelineResult.status = 'preview';
       pipelineResult.completed_at = new Date().toISOString();
+      const runFilePreview = path.join(POSTS_DIR, `run_${pipelineResult.run_id}.json`);
+      fs.writeFileSync(runFilePreview, JSON.stringify(pipelineResult, null, 2));
+      console.log(`✅ Preview run saved: ${runFilePreview}`);
+
+      // Auto-commit to GitHub so run data survives Render disk wipes
+      const { execSync: execSyncPreview } = require('child_process');
+      const repoRootPreview = path.join(__dirname, '../../').replace(/[\\/]+$/, '');
+      try {
+        const relPathPreview = `backend/data/posts/run_${pipelineResult.run_id}.json`;
+        execSyncPreview(`git -C "${repoRootPreview}" add "${relPathPreview}"`, { timeout: 10000 });
+        execSyncPreview(`git -C "${repoRootPreview}" commit -m "data: auto-save preview run ${pipelineResult.run_id}"`, { timeout: 10000 });
+        execSyncPreview(`git -C "${repoRootPreview}" push --no-verify`, { timeout: 30000 });
+        console.log(`✅ Preview run committed to GitHub: ${pipelineResult.run_id}`);
+      } catch (gitErr) {
+        console.log(`ℹ️ Git auto-commit skipped (non-fatal): ${gitErr.message?.split('\n')[0]}`);
+      }
+
+      pipelineState.status = 'idle';
+      pipelineState.currentStep = null;
       console.log('\n' + '='.repeat(60));
       console.log('🎉 PREVIEW COMPLETE! Check dashboard to review content.');
       console.log(`📱 Posts: ${contentData.posts.length} generated (not posted)`);

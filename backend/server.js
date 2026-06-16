@@ -33,6 +33,24 @@ const LOGS_DIR = path.join(DATA_DIR, 'logs');
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 });
 
+// ─── STARTUP: Restore run data from GitHub ────────────────────────────────────
+// On Render free tier, disk is wiped on each deploy. We restore persisted
+// run_*.json files from the GitHub repo on every boot so history survives.
+(function restoreRunDataFromGit() {
+  try {
+    const { execSync } = require('child_process');
+    const repoRoot = path.join(__dirname, '../');
+    // Only git-pull if we're in a git repo (not local dev with dirty working tree)
+    execSync(`git -C "${repoRoot}" fetch --depth=1 origin master`, { timeout: 20000, stdio: 'pipe' });
+    execSync(`git -C "${repoRoot}" checkout origin/master -- backend/data/posts/`, { timeout: 20000, stdio: 'pipe' });
+    const restored = fs.readdirSync(POSTS_DIR).filter(f => f.startsWith('run_')).length;
+    console.log(`✅ Restored ${restored} run data file(s) from GitHub`);
+  } catch (err) {
+    // Non-fatal — local dev, no git, or no data committed yet
+    console.log(`ℹ️ Git restore skipped (non-fatal): ${err.message?.split('\n')[0]?.substring(0, 80)}`);
+  }
+})();
+
 // ─── IN-MEMORY IMAGE STORE ────────────────────────────────────────────────────
 // Maps post_id → array of base64 data URIs for each slide.
 // Survives disk wipes (Render free tier ephemeral filesystem).
@@ -680,19 +698,27 @@ app.post('/api/regenerate', async (req, res) => {
 
       const contentData = await regeneratePost(excludeTopics);
 
-      // Save new post file (overwrite today's file with regenerated content)
-      const today = new Date().toISOString().split('T')[0];
-      const todayFile = path.join(POSTS_DIR, `${today}.json`);
-      const existing = fs.existsSync(todayFile)
-        ? JSON.parse(fs.readFileSync(todayFile, 'utf-8'))
-        : {};
-
-      fs.writeFileSync(todayFile, JSON.stringify({
-        ...existing,
-        run_id: existing.run_id || `regen_${Date.now()}`,
+      // Save new post file
+      const runId = `regen_${Date.now()}`;
+      const runFile = path.join(POSTS_DIR, `run_${runId}.json`);
+      
+      const pipelineResult = {
+        run_id: runId,
+        started_at: new Date().toISOString(),
+        completed_at: new Date().toISOString(),
+        status: 'preview',
+        research: { is_fallback: false, total_items: 1 },
         content: contentData,
-        regenerated_at: new Date().toISOString()
-      }, null, 2));
+        publishing: contentData.posts.map(p => ({
+          ...p,
+          status: 'preview',
+          instagram_post_id: `PREVIEW_${Date.now()}_${p.rank}`,
+          published_at: new Date().toISOString()
+        }))
+      };
+
+      fs.writeFileSync(runFile, JSON.stringify(pipelineResult, null, 2));
+      console.log(`✅ Regenerated post saved: ${runFile}`);
 
       // Render carousels for the new post
       const { renderAllCarousels } = require('./services/carouselRenderer');
